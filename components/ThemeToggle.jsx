@@ -2,21 +2,20 @@
 import { useEffect, useState } from "react";
 
 export default function ThemeToggle() {
-  const [dark, setDark] = useState(true);
+  const [theme, setTheme] = useState("dark");
 
-  // When the page loads, read the saved theme (if any)
+  // On load, use stored preference or default to dark
   useEffect(() => {
-    const saved = localStorage.getItem("theme");
-    const initial = saved || "dark";
-    document.documentElement.style.colorScheme = initial;
-    setDark(initial === "dark");
+    const saved = localStorage.getItem("theme") || "dark";
+    document.documentElement.style.colorScheme = saved;
+    setTheme(saved);
   }, []);
 
   function toggleTheme() {
-    const next = dark ? "light" : "dark";
+    const next = theme === "dark" ? "light" : "dark";
     document.documentElement.style.colorScheme = next;
     localStorage.setItem("theme", next);
-    setDark(!dark);
+    setTheme(next);
   }
 
   return (
@@ -24,7 +23,7 @@ export default function ThemeToggle() {
       onClick={toggleTheme}
       className="px-3 py-1 text-sm border rounded border-gray-600 hover:bg-gray-700 transition"
     >
-      {dark ? "🌞 Light" : "🌙 Dark"}
+      {theme === "dark" ? "🌞 Light" : "🌙 Dark"}
     </button>
   );
 }

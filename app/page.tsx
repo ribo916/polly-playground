@@ -2,7 +2,8 @@
 import { useState } from "react";
 
 export default function Page() {
-  const [result, setResult] = useState(null);
+  // Allow result to hold anything (JSON, string, error object, etc.)
+  const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
 
   async function runExample() {
@@ -11,7 +12,8 @@ export default function Page() {
       const res = await fetch("/api/example");
       const data = await res.json();
       setResult(data);
-    } catch (err) {
+    } catch (err: any) {
+      // err is unknown by default in TS, so declare type and assign
       setResult({ error: err.message });
     } finally {
       setLoading(false);

@@ -1,26 +1,58 @@
 @import "tailwindcss";
 
-:root {
-  --background: #ffffff;
-  --foreground: #171717;
-}
-
-@theme inline {
-  --color-background: var(--background);
-  --color-foreground: var(--foreground);
-  --font-sans: var(--font-geist-sans);
-  --font-mono: var(--font-geist-mono);
-}
-
-@media (prefers-color-scheme: dark) {
+@layer base {
   :root {
-    --background: #0a0a0a;
-    --foreground: #ededed;
-  }
-}
+    color-scheme: light dark;
 
-body {
-  background: var(--background);
-  color: var(--foreground);
-  font-family: Arial, Helvetica, sans-serif;
+    /* 🎨 Light theme palette (Material-style neutrals) */
+    --bg-light: #ECEFF1;      /* soft gray-blue background */
+    --text-light: #212121;    /* near-black readable text */
+    --panel-light: #FAFAFA;   /* subtle card/panel contrast */
+
+    /* 🌑 Dark theme palette (comfortable contrast) */
+    --bg-dark: #121212;       /* dark charcoal background */
+    --text-dark: #E6E6E6;     /* light gray text */
+    --panel-dark: #1E1E1E;    /* slightly raised dark surface */
+  }
+
+  /* Active theme mapping */
+  [style*="color-scheme: light"] {
+    --background: var(--bg-light);
+    --foreground: var(--text-light);
+    --panel: var(--panel-light);
+  }
+
+  [style*="color-scheme: dark"] {
+    --background: var(--bg-dark);
+    --foreground: var(--text-dark);
+    --panel: var(--panel-dark);
+  }
+
+  /* Base layout */
+  body {
+    background-color: var(--background);
+    color: var(--foreground);
+    font-family: system-ui, -apple-system, BlinkMacSystemFont, "Segoe UI",
+      Roboto, "Helvetica Neue", Arial, "Noto Sans", sans-serif;
+    transition: background-color 0.3s ease, color 0.3s ease;
+    line-height: 1.6;
+  }
+
+  /* API / code output panel */
+  pre {
+    background-color: var(--panel);
+    color: var(--foreground);
+    border-radius: 0.5rem;
+    padding: 1rem;
+    overflow-x: auto;
+    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+  }
+
+  /* Simple link and focus styling */
+  a {
+    color: #1565c0;
+  }
+  a:hover {
+    text-decoration: underline;
+  }
 }

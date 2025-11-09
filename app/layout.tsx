@@ -14,7 +14,7 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="bg-gray-50 text-gray-900 dark:bg-gray-900 dark:text-gray-100 min-h-screen transition-colors duration-300">
+      <body className="min-h-screen transition-colors duration-300">
         <header className="p-4 border-b border-gray-700 flex items-center justify-between">
           <h1 className="text-lg font-semibold">Polly API Showcase</h1>
           <ThemeToggle />
