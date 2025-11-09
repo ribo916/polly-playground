@@ -15,8 +15,15 @@ export default function RootLayout({
   return (
     <html lang="en" className="dark">
       <body className="min-h-screen transition-colors duration-300">
-        <header className="p-4 border-b border-gray-700 flex items-center justify-between">
-          <h1 className="text-lg font-semibold">Polly API Showcase</h1>
+        <header 
+          className="p-4 flex items-center justify-between"
+          style={{
+            borderBottom: "1px solid var(--border)",
+          }}
+        >
+          <h1 className="text-lg font-semibold" style={{ color: "var(--foreground)" }}>
+            Polly API Showcase
+          </h1>
           <ThemeToggle />
         </header>
         <main className="p-6">{children}</main>

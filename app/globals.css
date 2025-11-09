@@ -4,15 +4,23 @@
   :root {
     color-scheme: light dark;
 
-    /* 🎨 Light theme palette (Material-style neutrals) */
-    --bg-light: #ECEFF1;      /* soft gray-blue background */
-    --text-light: #212121;    /* near-black readable text */
-    --panel-light: #FAFAFA;   /* subtle card/panel contrast */
+    /* 🎨 Light theme palette (light shades of grey) */
+    --bg-light: #F5F5F5;      /* light gray background */
+    --text-light: #1A1A1A;    /* dark gray text */
+    --panel-light: #FFFFFF;  /* white panels */
+    --border-light: #D0D0D0;  /* medium gray border */
+    --muted-light: #6B6B6B;   /* medium gray muted text */
+    --accent-light: #3B82F6;  /* blue accent */
+    --accent-hover-light: #2563EB; /* darker blue on hover */
 
-    /* 🌑 Dark theme palette (comfortable contrast) */
-    --bg-dark: #121212;       /* dark charcoal background */
-    --text-dark: #E6E6E6;     /* light gray text */
-    --panel-dark: #1E1E1E;    /* slightly raised dark surface */
+    /* 🌑 Dark theme palette (dark gray - moved from light theme) */
+    --bg-dark: #1E1E1E;       /* dark gray background */
+    --text-dark: #E5E5E5;     /* light gray text */
+    --panel-dark: #2D2D2D;    /* slightly lighter dark gray panels */
+    --border-dark: #404040;   /* medium gray border */
+    --muted-dark: #A0A0A0;    /* muted gray text */
+    --accent-dark: #3B82F6;   /* blue accent */
+    --accent-hover-dark: #2563EB; /* darker blue on hover */
   }
 
   /* Active theme mapping */
@@ -20,12 +28,20 @@
     --background: var(--bg-light);
     --foreground: var(--text-light);
     --panel: var(--panel-light);
+    --border: var(--border-light);
+    --muted: var(--muted-light);
+    --accent: var(--accent-light);
+    --accent-hover: var(--accent-hover-light);
   }
 
   [style*="color-scheme: dark"] {
     --background: var(--bg-dark);
     --foreground: var(--text-dark);
     --panel: var(--panel-dark);
+    --border: var(--border-dark);
+    --muted: var(--muted-dark);
+    --accent: var(--accent-dark);
+    --accent-hover: var(--accent-hover-dark);
   }
 
   /* Base layout */
@@ -42,17 +58,19 @@
   pre {
     background-color: var(--panel);
     color: var(--foreground);
+    border: 1px solid var(--border);
     border-radius: 0.5rem;
     padding: 1rem;
     overflow-x: auto;
-    box-shadow: 0 1px 2px rgba(0, 0, 0, 0.08);
+    box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
   /* Simple link and focus styling */
   a {
-    color: #1565c0;
+    color: var(--accent);
   }
   a:hover {
+    color: var(--accent-hover);
     text-decoration: underline;
   }
 }

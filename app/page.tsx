@@ -22,20 +22,36 @@ export default function Page() {
 
   return (
     <div className="p-6 space-y-4">
-      <p className="text-gray-400">
+      <p style={{ color: "var(--muted)" }}>
         Run a live call to the <code>/pe/users</code> endpoint.
       </p>
 
       <button
         onClick={runExample}
-        className="px-4 py-2 bg-blue-600 rounded text-white hover:bg-blue-700"
+        className="px-4 py-2 rounded text-white transition-colors font-medium"
+        style={{
+          backgroundColor: "var(--accent)",
+        }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = "var(--accent-hover)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "var(--accent)";
+        }}
         disabled={loading}
       >
         {loading ? "Running..." : "Run Example"}
       </button>
 
       {result && (
-        <pre className="mt-4 bg-gray-800 p-4 rounded text-sm overflow-x-auto">
+        <pre 
+          className="mt-4 p-4 rounded text-sm overflow-x-auto"
+          style={{
+            backgroundColor: "var(--panel)",
+            color: "var(--foreground)",
+            border: "1px solid var(--border)",
+          }}
+        >
           {JSON.stringify(result, null, 2)}
         </pre>
       )}

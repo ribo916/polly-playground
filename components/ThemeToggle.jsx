@@ -21,9 +21,22 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="px-3 py-1 text-sm border rounded border-gray-600 hover:bg-gray-700 transition"
+      className="px-3 py-1 text-sm border rounded transition-colors"
+      style={{
+        borderColor: "var(--border)",
+        backgroundColor: "var(--panel)",
+        color: "var(--foreground)",
+      }}
+      onMouseEnter={(e) => {
+        e.currentTarget.style.backgroundColor = "var(--panel)";
+        e.currentTarget.style.opacity = "0.8";
+      }}
+      onMouseLeave={(e) => {
+        e.currentTarget.style.backgroundColor = "var(--panel)";
+        e.currentTarget.style.opacity = "1";
+      }}
     >
-      {theme === "dark" ? "🌞 Light" : "🌙 Dark"}
+      {theme === "dark" ? "🌞" : "🌙"}
     </button>
   );
 }
