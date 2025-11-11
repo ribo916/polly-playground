@@ -1,10 +1,12 @@
 import type { ReactNode } from "react";
 import "./globals.css";
 import ThemeToggle from "../components/ThemeToggle";
+import Sidebar from "../components/Sidebar";
+import Link from "next/link";
 
 export const metadata = {
-  title: "Polly API Showcase",
-  description: "Demo and workflow viewer for the Polly API",
+  title: "Polly Playground",
+  description: "API workflow and UI showcase for Polly",
 };
 
 export default function RootLayout({
@@ -14,19 +16,34 @@ export default function RootLayout({
 }) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen transition-colors duration-300">
-        <header 
-          className="p-4 flex items-center justify-between"
+      <body className="min-h-screen transition-colors duration-300 flex flex-col">
+        {/* Header */}
+        <header
+          className="flex items-center justify-between px-6 py-3 border-b"
           style={{
-            borderBottom: "1px solid var(--border)",
+            borderColor: "var(--border)",
+            backgroundColor: "var(--background)",
           }}
         >
-          <h1 className="text-lg font-semibold" style={{ color: "var(--foreground)" }}>
-            Polly API Showcase
-          </h1>
+          <Link
+            href="/"
+            className="flex items-center space-x-2 no-underline hover:no-underline"
+          >
+            <h1
+              className="text-xl font-medium tracking-wide transition-colors duration-300"
+              style={{ color: "var(--title-color)" }}
+            >
+              Polly Playground
+            </h1>
+          </Link>
           <ThemeToggle />
         </header>
-        <main className="p-6">{children}</main>
+
+        {/* Main layout */}
+        <div className="flex flex-1">
+          <Sidebar />
+          <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+        </div>
       </body>
     </html>
   );

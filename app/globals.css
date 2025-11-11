@@ -7,20 +7,22 @@
     /* 🎨 Light theme palette (light shades of grey) */
     --bg-light: #F5F5F5;      /* light gray background */
     --text-light: #1A1A1A;    /* dark gray text */
-    --panel-light: #FFFFFF;  /* white panels */
+    --panel-light: #FFFFFF;   /* white panels */
     --border-light: #D0D0D0;  /* medium gray border */
-    --muted-light: #6B6B6B;   /* medium gray muted text */
-    --accent-light: #3B82F6;  /* blue accent */
-    --accent-hover-light: #2563EB; /* darker blue on hover */
+    --muted-light: #6B6B6B;   /* muted text */
+    --accent-light: #005b6f;  /* teal accent */
+    --accent-hover-light: #007b8f; /* lighter teal on hover */
+    --border: #ccc;
 
-    /* 🌑 Dark theme palette (dark gray - moved from light theme) */
+    /* 🌑 Dark theme palette */
     --bg-dark: #1E1E1E;       /* dark gray background */
     --text-dark: #E5E5E5;     /* light gray text */
     --panel-dark: #2D2D2D;    /* slightly lighter dark gray panels */
     --border-dark: #404040;   /* medium gray border */
     --muted-dark: #A0A0A0;    /* muted gray text */
-    --accent-dark: #3B82F6;   /* blue accent */
-    --accent-hover-dark: #2563EB; /* darker blue on hover */
+    --accent-dark: #01FFF1;   /* turquoise accent */
+    --accent-hover-dark: #7FFFF8; /* lighter turquoise on hover */
+    --border: #333;
   }
 
   /* Active theme mapping */
@@ -32,6 +34,8 @@
     --muted: var(--muted-light);
     --accent: var(--accent-light);
     --accent-hover: var(--accent-hover-light);
+    --title-color: #000000;    /* black title in light mode */
+    --button-text: #ffffff;    /* ✅ white text on buttons */
   }
 
   [style*="color-scheme: dark"] {
@@ -42,6 +46,8 @@
     --muted: var(--muted-dark);
     --accent: var(--accent-dark);
     --accent-hover: var(--accent-hover-dark);
+    --title-color: #01FFF1;    /* turquoise title in dark mode */
+    --button-text: #000000;    /* ✅ black text on buttons */
   }
 
   /* Base layout */
@@ -65,12 +71,15 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
-  /* Simple link and focus styling */
+  /* ✅ Link styling — readable in both themes */
   a {
     color: var(--accent);
+    text-decoration: none;               /* removes underline */
+    transition: color 0.2s ease, text-decoration-color 0.2s ease;
   }
+
   a:hover {
     color: var(--accent-hover);
-    text-decoration: underline;
+    text-decoration: none;               /* stay clean on hover */
   }
 }
