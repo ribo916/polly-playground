@@ -1,41 +1,45 @@
 import { NextResponse } from "next/server";
+import { addServerLog } from "../../lib/serverLogStore";
 
-export async function GET(req) {
+export async function GET() {
+  const start = Date.now();
+
   try {
-    // Determine the correct base URL (works locally and on Vercel)
-    const baseUrl =
-      process.env.VERCEL_URL
-        ? `https://${process.env.VERCEL_URL}`
-        : `http://localhost:${process.env.PORT || 3000}`;
+    // STEP 1 — Request an access token
+    const authRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/auth`, {
+      method: "POST",
+    });
+    const { access_token } = await authRes.json();
 
-    // 1️⃣ Get a token from your own auth route
-    const tokenRes = await fetch(`${baseUrl}/api/auth`, { method: "POST" });
-    if (!tokenRes.ok) {
-      throw new Error(`Auth route failed: ${tokenRes.status}`);
-    }
+    // STEP 2 — Call Polly’s users endpoint
+    const res = await fetch(`${process.env.POLLY_BASE_URL}/api/v2/pe/users/?page_number=1`, {
+      headers: {
+        Accept: "application/json",
+        Authorization: `Bearer ${access_token}`,
+      },
+    });
 
-    const { access_token } = await tokenRes.json();
-    if (!access_token) throw new Error("No access_token returned from auth");
+    const data = await res.json();
 
-    // 2️⃣ Call Polly API with that token
-    const apiRes = await fetch(
-      `${process.env.POLLY_BASE_URL}/api/v2/pe/users/?page_number=1`,
-      {
-        headers: {
-          Authorization: `Bearer ${access_token}`,
-          Accept: "application/json",
-        },
-      }
-    );
+    // ✅ Log success
+    addServerLog({
+      endpoint: "/api/example",
+      method: "GET",
+      status: res.status,
+      duration: Date.now() - start,
+      request: {}, // optional if no body
+      response: data,
+    });
 
-    if (!apiRes.ok) {
-      throw new Error(`Polly API failed: ${apiRes.status}`);
-    }
-
-    const data = await apiRes.json();
     return NextResponse.json(data);
   } catch (err) {
-    console.error("❌ Example route error:", err);
+    // ❌ Log failure
+    addServerLog({
+      endpoint: "/api/example",
+      method: "GET",
+      error: err.message,
+    });
+
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

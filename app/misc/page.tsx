@@ -1,19 +1,34 @@
 "use client";
 import { useState } from "react";
+import { useLogs } from "../context/LogContext";
 
 export default function Page() {
-  // Allow result to hold anything (JSON, string, error object, etc.)
   const [result, setResult] = useState<any>(null);
   const [loading, setLoading] = useState(false);
+  const { addLog } = useLogs();
 
   async function runExample() {
+    const start = Date.now();
     try {
       setLoading(true);
       const res = await fetch("/api/example");
       const data = await res.json();
+
       setResult(data);
+
+      addLog({
+        endpoint: "/api/example",
+        method: "GET",
+        status: res.status,
+        duration: Date.now() - start,
+        response: data,
+      });
     } catch (err: any) {
-      // err is unknown by default in TS, so declare type and assign
+      addLog({
+        endpoint: "/api/example",
+        method: "GET",
+        error: err.message,
+      });
       setResult({ error: err.message });
     } finally {
       setLoading(false);
@@ -28,11 +43,10 @@ export default function Page() {
 
       <button
         onClick={runExample}
-        className="px-4 py-2 rounded font-medium transition-colors duration-200"
+        className="px-4 py-2 rounded font-medium transition-colors"
         style={{
           backgroundColor: "var(--accent)",
-          color: "var(--button-text)",        // ✅ uses global per-theme text color
-          cursor: loading ? "not-allowed" : "pointer",
+          color: "var(--button-text)",
         }}
         onMouseEnter={(e) => {
           e.currentTarget.style.backgroundColor = "var(--accent-hover)";
