@@ -26,7 +26,7 @@ export async function POST() {
     );
 
     console.log("🔹 Response status:", tokenResult.status);
-    console.log("🔹 Response body:", tokenResult.data);
+    // console.log("🔹 Response body:", tokenResult.data);
 
     return NextResponse.json(tokenResult.data, { status: tokenResult.status });
   } catch (err) {

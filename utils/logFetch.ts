@@ -2,7 +2,7 @@ import { addServerLog } from "../app/lib/serverLogStore";
 
 /**
  * Wrapper around fetch() that logs only external Polly API calls,
- * automatically redacts sensitive credentials.
+ * asynchronously (fire-and-forget) and redacts sensitive credentials.
  */
 export async function logFetch(
   url: string,
@@ -22,6 +22,7 @@ export async function logFetch(
     const res = await fetch(url, options);
     status = res.status;
 
+    // Safely attempt JSON parse, fallback to text
     try {
       data = await res.clone().json();
     } catch {
@@ -35,28 +36,31 @@ export async function logFetch(
   } finally {
     const duration = Date.now() - start;
 
-    // ✅ Only log *external Polly calls*
+    // ✅ Only log *external Polly* calls
     const shouldLog =
       typeof url === "string" &&
       (url.includes("pollyex.com") || url.includes("api.stage.polly.io"));
 
     if (shouldLog) {
-      try {
-        const cleanRequest = redactSensitiveData(safeParse(options.body));
-        const cleanHeaders = redactHeaders(options.headers);
+      // 🧠 Fire-and-forget to avoid blocking API responses
+      (async () => {
+        try {
+          const cleanRequest = redactSensitiveData(safeParse(options.body));
+          const cleanHeaders = redactHeaders(options.headers);
 
-        addServerLog({
-          endpoint: endpoint || url,
-          method: options.method || "GET",
-          status,
-          duration,
-          request: { ...cleanRequest, headers: cleanHeaders },
-          response: redactSensitiveData(data),
-          error,
-        });
-      } catch (logErr) {
-        console.error("⚠️ logFetch -> addServerLog failed:", logErr);
-      }
+          await addServerLog({
+            endpoint: endpoint || url,
+            method: options.method || "GET",
+            status,
+            duration,
+            request: { ...cleanRequest, headers: cleanHeaders },
+            response: redactSensitiveData(data),
+            error,
+          });
+        } catch (logErr) {
+          console.error("⚠️ logFetch -> addServerLog failed:", logErr);
+        }
+      })();
     }
   }
 }
