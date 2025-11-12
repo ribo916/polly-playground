@@ -29,6 +29,8 @@ export async function addServerLog(entry: Omit<ServerLogEntry, "id" | "timestamp
   await redis.lpush(LOG_KEY, JSON.stringify(log));
   await redis.ltrim(LOG_KEY, 0, 99);
   //await redis.expire(LOG_KEY, 86400); // expire the log list after 24 hours
+  // Set or refresh TTL to 7 days (604,800 seconds)
+  await redis.expire(LOG_KEY, 604800);
 }
 
 /** Be tolerant on read: handle strings OR objects */
