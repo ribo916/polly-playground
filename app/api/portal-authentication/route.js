@@ -1,49 +1,49 @@
 import { NextResponse } from "next/server";
-import { addServerLog } from "../../lib/serverLogStore";
+import { logFetch } from "../../../utils/logFetch";
 
-export async function POST(req) {
-  const start = Date.now();
+export async function POST(request) {
   try {
-    const { username } = await req.json();
+    const { username } = await request.json();
 
-    // STEP 1: Get a bearer token (server-side)
-    const authRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/auth`, {
-      method: "POST",
-    });
+    // 1️⃣ Log + fetch Bearer token
+    const tokenResult = await logFetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth`,
+      { method: "POST" },
+      "/api/auth"
+    );
 
-    const { access_token } = await authRes.json();
+    if (!tokenResult?.data?.access_token) {
+      return NextResponse.json(
+        { error: "Auth failed" },
+        { status: tokenResult.status || 500 }
+      );
+    }
 
-    // STEP 2: Call Polly portal-authentication
-    const res = await fetch(`${process.env.POLLY_BASE_URL}/api/v2/pe/portal-authentication/`, {
-      method: "POST",
-      headers: {
-        "Content-Type": "application/json",
-        Authorization: `Bearer ${access_token}`,
+    const access_token = tokenResult.data.access_token;
+
+    // 2️⃣ Log + fetch portalLoginToken from Polly
+    const body = JSON.stringify({ username });
+    const portalResult = await logFetch(
+      `${process.env.POLLY_BASE_URL}/api/v2/pe/portal-authentication/`,
+      {
+        method: "POST",
+        headers: {
+          "Content-Type": "application/json",
+          Authorization: `Bearer ${access_token}`,
+        },
+        body,
       },
-      body: JSON.stringify({ username }),
+      "/api/v2/pe/portal-authentication"
+    );
+
+    console.log("✅ Portal token received:", portalResult.data);
+
+    // 3️⃣ Return to client
+    return NextResponse.json(portalResult.data, {
+      status: portalResult.status,
     });
-
-    const data = await res.json();
-
-    // ✅ Log success to memory
-    addServerLog({
-      endpoint: "/api/portal-authentication",
-      method: "POST",
-      status: res.status,
-      duration: Date.now() - start,
-      request: { username },
-      response: data,
-    });
-
-    return NextResponse.json(data);
   } catch (err) {
-    // ❌ Log failure to memory
-    addServerLog({
-      endpoint: "/api/portal-authentication",
-      method: "POST",
-      error: err.message,
-    });
-
+    console.error("❌ Portal auth route error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

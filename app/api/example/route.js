@@ -1,45 +1,36 @@
 import { NextResponse } from "next/server";
-import { addServerLog } from "../../lib/serverLogStore";
+import { logFetch } from "../../../utils/logFetch";
 
 export async function GET() {
-  const start = Date.now();
-
   try {
-    // STEP 1 — Request an access token
-    const authRes = await fetch(`${process.env.NEXT_PUBLIC_BASE_URL}/api/auth`, {
-      method: "POST",
-    });
-    const { access_token } = await authRes.json();
+    // Step 1: get auth token (using logFetch)
+    const { data: tokenData } = await logFetch(
+      `${process.env.NEXT_PUBLIC_BASE_URL}/api/auth`,
+      { method: "POST" },
+      "/api/auth"
+    );
 
-    // STEP 2 — Call Polly’s users endpoint
-    const res = await fetch(`${process.env.POLLY_BASE_URL}/api/v2/pe/users/?page_number=1`, {
-      headers: {
-        Accept: "application/json",
-        Authorization: `Bearer ${access_token}`,
+    const access_token = tokenData?.access_token;
+    if (!access_token) {
+      throw new Error("Missing access token");
+    }
+
+    // Step 2: call Polly API with Bearer token
+    const { data: usersData, status } = await logFetch(
+      `${process.env.POLLY_BASE_URL}/api/v2/pe/users/`,
+      {
+        method: "GET",
+        headers: {
+          Authorization: `Bearer ${access_token}`,
+        },
       },
-    });
+      "/api/v2/pe/users/"
+    );
 
-    const data = await res.json();
-
-    // ✅ Log success
-    addServerLog({
-      endpoint: "/api/example",
-      method: "GET",
-      status: res.status,
-      duration: Date.now() - start,
-      request: {}, // optional if no body
-      response: data,
-    });
-
-    return NextResponse.json(data);
+    // Step 3: return to UI
+    return NextResponse.json(usersData, { status });
   } catch (err) {
-    // ❌ Log failure
-    addServerLog({
-      endpoint: "/api/example",
-      method: "GET",
-      error: err.message,
-    });
-
+    console.error("❌ Example route error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }

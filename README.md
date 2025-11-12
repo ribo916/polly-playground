@@ -1,36 +1,117 @@
-This is a [Next.js](https://nextjs.org) project bootstrapped with [`create-next-app`](https://nextjs.org/docs/app/api-reference/cli/create-next-app).
+# Polly API Showcase
 
-## Getting Started
+This project is a **Next.js-based showcase** designed to demonstrate real-world interactions with **Polly's API**. It provides a minimal but production-like structure for authenticating, calling Polly endpoints, and visualizing responses — while keeping credentials and tokens fully secure.
 
-First, run the development server:
+---
+
+## 🚀 Getting Started
 
 ```bash
+npm install
 npm run dev
-# or
-yarn dev
-# or
-pnpm dev
-# or
-bun dev
 ```
 
-Open [http://localhost:3000](http://localhost:3000) with your browser to see the result.
+Then open [http://localhost:3000](http://localhost:3000) in your browser.
 
-You can start editing the page by modifying `app/page.tsx`. The page auto-updates as you edit the file.
+The app includes a few sample pages, such as:
 
-This project uses [`next/font`](https://nextjs.org/docs/app/building-your-application/optimizing/fonts) to automatically optimize and load [Geist](https://vercel.com/font), a new font family for Vercel.
+* `/loan-scenarios` → Demonstrates launching Polly's embedded Pricer via portal token.
+* `/api/example` → Calls Polly's `/api/v2/pe/users/` endpoint to show a basic API call.
+* `/logs` → Displays real-time server logs of all outbound Polly API requests.
 
-## Learn More
+---
 
-To learn more about Next.js, take a look at the following resources:
+## 🧠 Architecture Overview
 
-- [Next.js Documentation](https://nextjs.org/docs) - learn about Next.js features and API.
-- [Learn Next.js](https://nextjs.org/learn) - an interactive Next.js tutorial.
+### 1. Server-Side Request Flow
 
-You can check out [the Next.js GitHub repository](https://github.com/vercel/next.js) - your feedback and contributions are welcome!
+All network calls to Polly are made **from the server**, never from the client. This ensures that sensitive credentials and API tokens remain protected.
 
-## Deploy on Vercel
+The flow typically looks like:
 
-The easiest way to deploy your Next.js app is to use the [Vercel Platform](https://vercel.com/new?utm_medium=default-template&filter=next.js&utm_source=create-next-app&utm_campaign=create-next-app-readme) from the creators of Next.js.
+```
+Client → /api/example → /api/auth → Polly API (auth/token)
+                             ↳ Polly API (data endpoint)
+```
 
-Check out our [Next.js deployment documentation](https://nextjs.org/docs/app/building-your-application/deploying) for more details.
+Only the **actual Polly API calls** are logged and shown in `/logs`.
+
+### 2. `logFetch.ts`
+
+A lightweight wrapper around `fetch()` that:
+
+* Measures duration, status, and errors for each call.
+* Redacts sensitive credentials and headers before logging.
+* Only logs **external Polly API calls** (not internal `/api/...` routes).
+
+```ts
+const shouldLog = url.includes("pollyex.com") || url.includes("api.stage.polly.io");
+```
+
+Redaction automatically removes tokens, passwords, and secrets from both request bodies and headers.
+
+### 3. `serverLogStore.ts`
+
+In-memory storage for all log entries:
+
+```ts
+addServerLog({ endpoint, method, status, duration, request, response, error });
+```
+
+* Keeps logs only during runtime (not persisted).
+* Trims old entries after 100 items.
+
+### 4. `/api/logs`
+
+A Next.js **Route Handler** that:
+
+* Returns all logs via `GET`.
+* Clears logs via `DELETE`.
+
+### 5. `/logs` UI
+
+A client page that renders the current logs in a readable format with syntax highlighting.
+
+* Only server-side logs are now shown.
+* Expanding a log entry reveals sanitized request/response payloads.
+
+---
+
+## 🧩 Known Edge Cases
+
+* **Chained internal requests**: If a route like `/api/example` calls another internal route (`/api/auth`), only the final outbound requests to Polly are logged. This avoids noise in the `/logs` page.
+* **URLSearchParams bodies**: Automatically converted to objects before logging.
+* **Token or password exposure**: Automatically redacted in both headers and bodies.
+
+---
+
+## ⚠️ Refactoring Notes
+
+This setup intentionally avoids using a database or file persistence. However, if you later:
+
+* Add caching or server restarts, logs will reset.
+* Add concurrent API calls, consider thread-safe logging (e.g. with Redis).
+* Expand to other APIs (non-Polly), update the `shouldLog` logic.
+
+When debugging or adding new features, focus on **`logFetch`** — that’s the central hook for all outbound tracking and where most bugs will surface.
+
+---
+
+## 🧭 Project Intent
+
+This isn’t meant to be a full product — it’s a **demo harness** for Polly’s APIs. Each route (e.g., `/api/portal-authentication`, `/api/auth`, `/api/example`) should correspond to a real-world Polly workflow and demonstrate what data Polly returns, not how this app functions internally.
+
+---
+
+## ✅ Summary
+
+| Component           | Purpose                                               |
+| ------------------- | ----------------------------------------------------- |
+| `logFetch.ts`       | Handles outbound Polly API calls and redacted logging |
+| `serverLogStore.ts` | Keeps in-memory log list for current runtime          |
+| `/api/logs`         | Returns or clears logs                                |
+| `/logs`             | Displays all logged Polly calls                       |
+
+---
+
+**Recommended next step:** integrate additional Polly endpoints into `logFetch()` and the UI to build out a richer demo catalog for pricing, locking, and product workflows.
