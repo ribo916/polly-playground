@@ -1,4 +1,4 @@
-# Polly API Showcase
+# Polly Playground
 
 This project is a **Next.js-based showcase** designed to demonstrate real-world interactions with **Polly's API**. It provides a minimal but production-like structure for authenticating, calling Polly endpoints, and visualizing responses — while keeping credentials and tokens fully secure.
 
