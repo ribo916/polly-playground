@@ -13,7 +13,7 @@ const sections = [
   {
     title: "MISC",
     items: [
-      { label: "API Example", href: "/misc" },
+      { label: "API Samples", href: "/misc" },
       { label: "Logs", href: "/logs" },        // placeholder page
     ],
   },

@@ -1,65 +1,73 @@
 "use client";
 import { useState } from "react";
-import { useLogs } from "../context/LogContext";
 
-export default function Page() {
-  const [result, setResult] = useState<any>(null);
-  const [loading, setLoading] = useState(false);
-  const { addLog } = useLogs();
+export default function ApiSamplesPage() {
+  const [output, setOutput] = useState<string>("");
 
-  async function runExample() {
-    const start = Date.now();
+  async function callGetUsers() {
+    setOutput("⏳ Calling Get Users...");
     try {
-      setLoading(true);
-      const res = await fetch("/api/example");
-      const data = await res.json();
+      const res = await fetch("/api/example", { method: "GET" });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
 
-      setResult(data);
-
-      addLog({
-        endpoint: "/api/example",
-        method: "GET",
-        status: res.status,
-        duration: Date.now() - start,
-        response: data,
-      });
+      setOutput("✅ Get Users complete — check /logs for full response.");
     } catch (err: any) {
-      addLog({
-        endpoint: "/api/example",
-        method: "GET",
-        error: err.message,
-      });
-      setResult({ error: err.message });
-    } finally {
-      setLoading(false);
+      setOutput(`❌ Get Users failed: ${err.message}`);
+    }
+  }
+
+  async function callPricingScenario() {
+    setOutput("⏳ Calling Pricing Scenario...");
+    try {
+      const res = await fetch("/api/pricing-scenario", { method: "POST" });
+      if (!res.ok) throw new Error(`Status ${res.status}`);
+
+      setOutput("✅ Pricing Scenario complete — check /logs for full response.");
+    } catch (err: any) {
+      setOutput(`❌ Pricing Scenario failed: ${err.message}`);
     }
   }
 
   return (
-    <div className="p-6 space-y-4">
-      <p style={{ color: "var(--muted)" }}>
-        Run a live call to the <code>/pe/users</code> endpoint.
+    <div className="p-6 space-y-6">
+      <h1
+        className="text-2xl font-bold"
+        style={{ color: "var(--foreground)" }}
+      >
+        API Samples
+      </h1>
+
+      <p className="text-sm" style={{ color: "var(--muted)" }}>
+        These sample calls execute real Polly API requests. Responses are logged
+        securely on the <code>/logs</code> page.
       </p>
 
-      <button
-        onClick={runExample}
-        className="px-4 py-2 rounded font-medium transition-colors"
-        style={{
-          backgroundColor: "var(--accent)",
-          color: "var(--button-text)",
-        }}
-        onMouseEnter={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--accent-hover)";
-        }}
-        onMouseLeave={(e) => {
-          e.currentTarget.style.backgroundColor = "var(--accent)";
-        }}
-        disabled={loading}
-      >
-        {loading ? "Running..." : "Run Example"}
-      </button>
+      <div className="flex gap-4">
+        <button
+          onClick={callGetUsers}
+          className="px-4 py-2 rounded font-medium transition-colors"
+          style={{
+            backgroundColor: "var(--accent)",
+            color: "var(--button-text)",
+          }}
+        >
+          Get Users
+        </button>
 
-      {result && (
+        <button
+          onClick={callPricingScenario}
+          className="px-4 py-2 rounded font-medium transition-colors"
+          style={{
+            backgroundColor: "var(--accent)",
+            color: "var(--button-text)",
+          }}
+        >
+          Pricing Scenario
+        </button>
+      </div>
+
+      {/* Status Output */}
+      {output && (
         <pre
           className="mt-4 p-4 rounded text-sm overflow-x-auto"
           style={{
@@ -68,7 +76,7 @@ export default function Page() {
             border: "1px solid var(--border)",
           }}
         >
-          {JSON.stringify(result, null, 2)}
+          {output}
         </pre>
       )}
     </div>

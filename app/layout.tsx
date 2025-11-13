@@ -7,7 +7,7 @@ import Link from "next/link";
 
 export const metadata = {
   title: "Polly Playground",
-  description: "API workflow and UI showcase for Polly",
+  description: "API demos and workflow testing",
 };
 
 export default function RootLayout({ children }: { children: ReactNode }) {
