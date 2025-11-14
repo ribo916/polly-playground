@@ -57,3 +57,17 @@ export async function getServerLogs(): Promise<ServerLogEntry[]> {
 export async function clearServerLogs() {
   await redis.del(LOG_KEY);
 }
+
+const TRUNCATE_KEY = "log_truncate_mode";
+
+export async function getTruncateFlag(): Promise<boolean> {
+  const raw = await redis.get(TRUNCATE_KEY);
+  // Handle both string "true"/"false" and boolean true/false from Redis
+  if (raw === "true" || raw === true) return true;
+  if (raw === "false" || raw === false) return false;
+  return false; // default false if key doesn't exist or is unexpected value
+}
+
+export async function setTruncateFlag(value: boolean) {
+  await redis.set(TRUNCATE_KEY, value ? "true" : "false");
+}

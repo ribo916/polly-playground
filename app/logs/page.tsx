@@ -1,12 +1,17 @@
 "use client";
-import { useEffect, useState } from "react";
+import { useEffect, useState, useRef } from "react";
 
 export default function LogsPage() {
   const [logs, setLogs] = useState<any[]>([]);
   const [expanded, setExpanded] = useState<string | null>(null);
   const [filter, setFilter] = useState<"all" | "success" | "error">("all");
+  const [truncateEnabled, setTruncateEnabled] = useState<boolean | null>(null);
   const [loading, setLoading] = useState(false);
+  const hasFetchedRef = useRef(false);
 
+  // -------------------------------
+  // Load logs
+  // -------------------------------
   const fetchServerLogs = async () => {
     setLoading(true);
     try {
@@ -14,30 +19,51 @@ export default function LogsPage() {
       const data = await res.json();
       setLogs(Array.isArray(data) ? data : []);
     } catch (err) {
-      console.error("Failed to fetch server logs:", err);
+      console.error("Failed to fetch logs:", err);
     } finally {
       setLoading(false);
     }
   };
 
+  // -------------------------------
+  // Load initial data (logs + truncate flag)
+  // -------------------------------
   useEffect(() => {
-    fetchServerLogs();
+    // Prevent duplicate calls in React Strict Mode
+    if (hasFetchedRef.current) return;
+    hasFetchedRef.current = true;
+
+    // Fetch both in parallel
+    Promise.all([
+      fetchServerLogs(),
+      fetch("/api/settings/truncate")
+        .then((res) => res.json())
+        .then((data) => {
+          if (typeof data.enabled === "boolean") {
+            setTruncateEnabled(data.enabled);
+          }
+        })
+        .catch((err) => {
+          console.error("Failed to load truncate setting", err);
+        }),
+    ]);
   }, []);
 
+  // -------------------------------
   const handleClearLogs = async () => {
     try {
       await fetch("/api/logs", { method: "DELETE" });
       setLogs([]);
     } catch (err) {
-      console.error("Failed to clear server logs:", err);
+      console.error("Failed to clear logs:", err);
     }
   };
 
   const getStatusColor = (status: number) => {
-    if (status >= 500) return "#ef4444"; // red
-    if (status >= 400) return "#f97316"; // orange
-    if (status >= 300) return "#facc15"; // yellow
-    return "#10b981"; // green
+    if (status >= 500) return "#ef4444";
+    if (status >= 400) return "#f97316";
+    if (status >= 300) return "#facc15";
+    return "#10b981";
   };
 
   const filteredLogs = logs.filter((log) => {
@@ -67,11 +93,12 @@ export default function LogsPage() {
         let color = "var(--foreground)";
         if (/^"/.test(match)) {
           color = /:$/.test(match)
-            ? "var(--muted)" // keys
-            : "#3B82F6"; // strings
+            ? "var(--muted)"
+            : "#3B82F6";
         } else if (/true|false/.test(match)) color = "#10b981";
         else if (/null/.test(match)) color = "#f59e0b";
-        else color = "#f87171"; // numbers
+        else color = "#f87171";
+
         return `<span style="color:${color}">${match}</span>`;
       }
     );
@@ -83,7 +110,7 @@ export default function LogsPage() {
       className="p-6 space-y-2 overflow-y-auto max-h-[80vh]"
       style={{ backgroundColor: "var(--background)" }}
     >
-      {/* Header Row */}
+      {/* HEADER */}
       <div className="flex flex-wrap items-center justify-between mb-4 gap-3">
         <div className="flex items-center gap-3">
           <h2
@@ -93,6 +120,7 @@ export default function LogsPage() {
             API Logs
           </h2>
 
+          {/* FILTER */}
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as any)}
@@ -108,35 +136,29 @@ export default function LogsPage() {
             <option value="error">Error</option>
           </select>
 
-          {/* 🔄 Manual refresh button */}
+          {/* TRUNCATE TOGGLE */}
           <button
-            onClick={fetchServerLogs}
-            disabled={loading}
-            className="text-sm px-3 py-1 rounded border transition-colors"
-            style={{
-              backgroundColor: "var(--panel)",
-              color: "var(--foreground)",
-              borderColor: "var(--border)",
-              opacity: loading ? 0.6 : 1,
-              cursor: loading ? "not-allowed" : "pointer",
-            }}
-            onMouseEnter={(e) => {
-              if (!loading)
-                e.currentTarget.style.backgroundColor = "var(--accent)";
-              e.currentTarget.style.color = "#000";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--panel)";
-              e.currentTarget.style.color = "var(--foreground)";
-            }}
-          >
-            {loading ? "Refreshing..." : "Refresh"}
-          </button>
-        </div>
+            type="button"
+            onClick={async () => {
+              // Don't allow toggling until state is loaded
+              if (truncateEnabled === null) {
+                console.warn("[Truncate button] Clicked but state is null, ignoring");
+                return;
+              }
+              
+              // Handle null state properly - default to false if null
+              const currentValue = truncateEnabled ?? false;
+              const newValue = !currentValue;
+              console.log(`[Truncate button] Toggling from ${currentValue} to ${newValue}`);
+              setTruncateEnabled(newValue);
 
-        {logs.length > 0 && (
-          <button
-            onClick={handleClearLogs}
+              await fetch("/api/settings/truncate", {
+                method: "POST",
+                headers: { "Content-Type": "application/json" },
+                body: JSON.stringify({ enabled: newValue }),
+              });
+            }}
+            disabled={truncateEnabled === null}
             className="text-sm px-3 py-1 rounded transition-colors"
             style={{
               backgroundColor: "var(--panel)",
@@ -152,17 +174,47 @@ export default function LogsPage() {
               e.currentTarget.style.color = "var(--foreground)";
             }}
           >
+            {truncateEnabled ? "Truncate: ON" : "Truncate: OFF"}
+          </button>
+
+          {/* REFRESH */}
+          <button
+            onClick={fetchServerLogs}
+            disabled={loading}
+            className="text-sm px-3 py-1 rounded border transition-colors"
+            style={{
+              backgroundColor: "var(--panel)",
+              color: "var(--foreground)",
+              borderColor: "var(--border)",
+              opacity: loading ? 0.6 : 1,
+              cursor: loading ? "not-allowed" : "pointer",
+            }}
+          >
+            {loading ? "Refreshing..." : "Refresh"}
+          </button>
+        </div>
+
+        {/* CLEAR LOGS */}
+        {logs.length > 0 && (
+          <button
+            onClick={handleClearLogs}
+            className="text-sm px-3 py-1 rounded transition-colors"
+            style={{
+              backgroundColor: "var(--panel)",
+              color: "var(--foreground)",
+              border: "1px solid var(--border)",
+            }}
+          >
             Clear Logs
           </button>
         )}
       </div>
 
       {filteredLogs.length === 0 && (
-        <p style={{ color: "var(--muted)" }}>
-          No {filter !== "all" ? filter : ""} logs found.
-        </p>
+        <p style={{ color: "var(--muted)" }}>No logs found.</p>
       )}
 
+      {/* LOG LIST */}
       {filteredLogs.map((log) => (
         <div
           key={log.id}
@@ -174,42 +226,39 @@ export default function LogsPage() {
           }}
           onClick={() => setExpanded(expanded === log.id ? null : log.id)}
         >
-          {/* summary line */}
+          {/* SUMMARY */}
           <div className="flex justify-between items-center text-sm">
             <div className="flex items-center gap-2 font-mono">
               <span
                 className="inline-block w-2.5 h-2.5 rounded-full"
                 style={{
                   backgroundColor: getStatusColor(log.status),
-                  flexShrink: 0,
                 }}
               ></span>
               <span className="font-semibold" style={{ color: "var(--accent)" }}>
                 [{log.method}]
-              </span>{" "}
-              <span>{log.endpoint}</span>{" "}
+              </span>
+              <span>{log.endpoint}</span>
               <span
                 style={{
                   color: log.status >= 400 ? "#f87171" : "var(--muted)",
                 }}
               >
                 {log.status}
-              </span>{" "}
+              </span>
               · {log.duration} ms
             </div>
             <span
               className="text-xs"
               style={{
                 color: "var(--muted)",
-                minWidth: "120px",
-                textAlign: "right",
               }}
             >
               {new Date(log.timestamp).toLocaleTimeString()}
             </span>
           </div>
 
-          {/* expanded details */}
+          {/* EXPANDED DETAILS */}
           {expanded === log.id && (
             <div className="mt-3 text-xs space-y-3">
               <div>
@@ -220,7 +269,7 @@ export default function LogsPage() {
                   Request
                 </div>
                 <pre
-                  className="p-3 rounded-md overflow-x-auto shadow-sm"
+                  className="p-3 rounded-md overflow-x-auto"
                   style={{
                     backgroundColor: "rgba(0,0,0,0.05)",
                     border: "1px solid var(--border)",
@@ -239,7 +288,7 @@ export default function LogsPage() {
                   Response
                 </div>
                 <pre
-                  className="p-3 rounded-md overflow-x-auto shadow-sm"
+                  className="p-3 rounded-md overflow-x-auto"
                   style={{
                     backgroundColor: "rgba(0,0,0,0.05)",
                     border: "1px solid var(--border)",
