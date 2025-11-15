@@ -11,10 +11,16 @@ const sections = [
     ],
   },
   {
+    title: "UTILITIES",
+    items: [
+      { label: "JSON Convert", href: "/utilities/json-convert" },
+    ],
+  },
+  {
     title: "MISC",
     items: [
       { label: "API Samples", href: "/misc" },
-      { label: "Logs", href: "/logs" },        // placeholder page
+      { label: "API Logs", href: "/logs" },        
     ],
   },
 ];

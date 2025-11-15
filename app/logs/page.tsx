@@ -117,7 +117,6 @@ export default function LogsPage() {
             className="text-lg font-semibold"
             style={{ color: "var(--foreground)" }}
           >
-            API Logs
           </h2>
 
           {/* FILTER */}
