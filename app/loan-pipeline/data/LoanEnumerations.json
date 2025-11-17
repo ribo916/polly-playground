@@ -1,0 +1,109 @@
+{
+    "fhaFinancingOption": {
+      "description": "How the FHA Upfront MIP is paid — either financed into the loan amount or paid in cash.",
+      "enum": [
+        "FINANCE",
+        "PAID_IN_CASH",
+        null
+      ]
+    },
+  
+    "usdaFinancingOption": {
+      "description": "How the USDA Guarantee Fee is handled — financed or paid in cash.",
+      "enum": [
+        "FINANCE",
+        "PAID_IN_CASH",
+        null
+      ]
+    },
+  
+    "vaFinancingOption": {
+      "description": "How the VA Funding Fee is handled — financed or paid in cash.",
+      "enum": [
+        "FINANCE",
+        "PAID_IN_CASH",
+        null
+      ]
+    },
+  
+    "vaLoanHistory": {
+      "description": "Whether the borrower has previously used their VA entitlement.",
+      "enum": [
+        "FIRST_USE",
+        "REPEAT_USE",
+        null
+      ]
+    },
+  
+    "purpose": {
+      "description": "Loan purpose, driving eligibility and pricing logic.",
+      "enum": [
+        "NONE",
+        "PURCHASE",
+        "REFINANCE",
+        "CONSTRUCTION",
+        "CONSTRUCTION_PERM",
+        "OTHER",
+        "NO_CASH_OUT_REFINANCE",
+        "CASH_OUT_REFINANCE"
+      ]
+    },
+  
+    "aus": {
+      "description": "Automated underwriting system used for the loan.",
+      "enum": [
+        "NONE",
+        "MANUAL",
+        "DU",
+        "LP",
+        "AUS_OTHER"
+      ]
+    },
+  
+    "temporaryBuydownType": {
+      "description": "Type of temporary buydown applied. Controls investor adjustments and eligibility.",
+      "enum": [
+        "THREE_TWO_ONE",
+        "TWO_ONE",
+        "ONE_ZERO",
+        "ZERO_ONE",
+        null
+      ]
+    },
+  
+    "loanType": {
+      "description": "Loan program classification — determines rulesets and pricing logic.",
+      "enum": [
+        "NONE",
+        "CONVENTIONAL",
+        "FHA",
+        "VA",
+        "USDA",
+        "JUMBO",
+        "NON_QM",
+        "HELOC",
+        null
+      ]
+    },
+  
+    "impoundType": {
+      "description": "Indicates whether property taxes and insurance are impounded.",
+      "enum": [
+        "NONE",
+        "PARTIAL",
+        "FULL",
+        null
+      ]
+    },
+  
+    "streamlineRefinanceType": {
+      "description": "Streamline refinance category. Used for FHA/VA streamline rules.",
+      "enum": [
+        "NONE",
+        "NO_CASHOUT_STREAMLINED_REFINANCE",
+        "NO_CASHOUT_FHA_STREAMLINED_REFINANCE",
+        null
+      ]
+    }
+  }
+  
