@@ -1,119 +1,204 @@
-/* eslint-disable @typescript-eslint/no-explicit-any */
-
 "use client";
 
 import { useState } from "react";
-import { createLoanAction } from "../actions/createLoanAction";
-
-// Load JSON directly from public or embed it
+import {
+  deriveFieldDefinitions,
+  humanizeLabel,
+} from "../helpers/fieldUtils";
+import {
+  generateInitialFormFromConfig,
+  buildPayloadFromForm,
+} from "../helpers/payloadBuilder";
 import sample from "@/app/loan-pipeline/data/CreateLoanPayload.json";
 import enums from "@/app/loan-pipeline/data/LoanEnumerations.json";
+import { createLoanAction } from "../actions/createLoanAction";
 
-interface CreateLoanModalProps {
+// Section map based on parent JSON paths
+const SECTION_MAP: Record<string, string> = {
+  borrower: "Borrower",
+  property: "Property",
+  loanofficer: "Loan Officer",
+};
+
+function getSectionForField(key: string): string {
+  const parts = key.split(".");
+  const top = parts[0];
+  return SECTION_MAP[top] ?? "Loan";
+}
+
+export default function CreateLoanModal({
+  open,
+  onClose,
+}: {
   open: boolean;
   onClose: () => void;
-}
+}) {
+  // Build field definitions from swagger + sample
+  const fieldDefs = deriveFieldDefinitions(sample, enums);
 
-// Helper function to extract all non-null fields (including nested objects)
-function extractNonNullFields(obj: Record<string, unknown>, prefix = ""): Record<string, string | number | boolean> {
-  const fields: Record<string, string | number | boolean> = {};
-  
-  for (const [key, value] of Object.entries(obj)) {
-    const fullKey = prefix ? `${prefix}.${key}` : key;
-    
-    if (value === null) {
-      continue; // Skip null fields
-    }
-    
-    if (typeof value === "object" && !Array.isArray(value) && value !== null) {
-      // Recursively extract non-null fields from nested objects
-      const nestedFields = extractNonNullFields(value as Record<string, unknown>, fullKey);
-      // Only add nested fields if there are any (skip empty objects like customValues: {})
-      if (Object.keys(nestedFields).length > 0) {
-        Object.assign(fields, nestedFields);
-      }
-      // Empty objects will be included in the final payload via mergeWithSample
-    } else if (typeof value === "string" || typeof value === "number" || typeof value === "boolean") {
-      fields[fullKey] = value;
-    }
-  }
-  
-  return fields;
-}
+  // Generate the initial form (only required non-nullable + sample non-null)
+  const [form, setForm] = useState<Record<string, any>>(() =>
+    generateInitialFormFromConfig(fieldDefs, sample)
+  );
 
-// Helper function to merge form data with all sample fields (including null ones)
-function mergeWithSample(nestedFormData: any, sampleData: any): any {
-  const merged: any = {};
-  
-  // First, copy all fields from sample (including null ones)
-  for (const [key, value] of Object.entries(sampleData)) {
-    if (typeof value === "object" && !Array.isArray(value) && value !== null) {
-      // Handle nested objects - recursively merge
-      merged[key] = mergeWithSample(
-        nestedFormData[key] || {},
-        value as any
-      );
-    } else {
-      // Use form value if it exists, otherwise use sample value (which might be null)
-      merged[key] = nestedFormData[key] !== undefined ? nestedFormData[key] : value;
-    }
-  }
-  
-  return merged;
-}
-
-// Helper function to convert flat form data to nested structure
-function unflattenFormData(flatData: any): any {
-  const nested: any = {};
-  
-  for (const [key, value] of Object.entries(flatData)) {
-    const parts = key.split(".");
-    let current = nested;
-    
-    for (let i = 0; i < parts.length - 1; i++) {
-      const part = parts[i];
-      if (!current[part]) {
-        current[part] = {};
-      }
-      current = current[part];
-    }
-    
-    current[parts[parts.length - 1]] = value;
-  }
-  
-  return nested;
-}
-
-export default function CreateLoanModal({ open, onClose }: CreateLoanModalProps) {
-  const [form, setForm] = useState(() => {
-    // Extract all non-null fields from sample (including nested)
-    return extractNonNullFields(sample);
-  });
-
+  const [expandedSections, setExpandedSections] = useState<
+    Record<string, boolean>
+  >({});
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
   if (!open) return null;
 
+  function toggleSection(section: string) {
+    setExpandedSections((prev) => ({
+      ...prev,
+      [section]: !prev[section],
+    }));
+  }
+
   function updateField(key: string, value: any) {
-    setForm((prev: any) => ({ ...prev, [key]: value }));
+    setForm((prev) => ({ ...prev, [key]: value }));
   }
 
   async function handleSubmit() {
     setLoading(true);
-    
-    // Convert flat form data to nested structure
-    const nestedForm = unflattenFormData(form);
-    
-    // Merge with sample to include all fields (including null ones)
-    const payload = mergeWithSample(nestedForm, sample);
-    
+
+    const payload = buildPayloadFromForm(fieldDefs, form, sample);
     const res = await createLoanAction(payload);
+
     setLoading(false);
     setResult(res);
+
     if (res.ok) {
       setTimeout(() => onClose(), 1200);
     }
+  }
+
+  // Group fields into sections
+  const sections: Record<string, string[]> = {};
+  for (const def of fieldDefs) {
+    const section = getSectionForField(def.key);
+    if (!sections[section]) sections[section] = [];
+    sections[section].push(def.key);
+  }
+
+  function shouldShowField(key: string): boolean {
+    const section = getSectionForField(key);
+    const def = fieldDefs.find((d) => d.key === key);
+
+    if (!def) return false;
+
+    // Required + non-nullable are ALWAYS shown
+    if (def.isRequired && !def.isNullable) return true;
+
+    // Required + nullable → shown (visible in first view)
+    if (def.isRequired && def.isNullable) return true;
+
+    // Sample has non-null value → show by default
+    const sampleFlat = sample; // Already flattened inside fieldDefs
+    // BUT we rely on fieldUtils flatten logic → use form: form contains default visible
+    if (form[key] !== undefined) return true;
+
+    // Otherwise only if section expanded
+    return expandedSections[section] === true;
+  }
+
+  function renderField(key: string) {
+    const def = fieldDefs.find((d) => d.key === key);
+    if (!def) return null;
+
+    const label = humanizeLabel(key);
+    const enumInfo = def.enumValues;
+    const value = form[key];
+
+    // ENUM → dropdown
+    if (enumInfo) {
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-sm">{label}</label>
+          <select
+            value={value ?? ""}
+            onChange={(e) =>
+              updateField(key, e.target.value === "" ? null : e.target.value)
+            }
+            className="p-2 rounded border"
+            style={{
+              backgroundColor: "var(--background)",
+              borderColor: "var(--border)",
+            }}
+          >
+            <option value="">Select…</option>
+            {enumInfo.map((opt: string | null) =>
+              opt === null ? null : (
+                <option key={opt} value={opt}>
+                  {opt}
+                </option>
+              )
+            )}
+          </select>
+        </div>
+      );
+    }
+
+    // DATE / DATETIME
+    if (def.format === "date") {
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-sm">{label}</label>
+          <input
+            type="date"
+            value={value ?? ""}
+            onChange={(e) => updateField(key, e.target.value)}
+            className="p-2 rounded border"
+            style={{
+              backgroundColor: "var(--background)",
+              borderColor: "var(--border)",
+            }}
+          />
+        </div>
+      );
+    }
+
+    if (def.format === "date-time") {
+      return (
+        <div key={key} className="flex flex-col gap-1">
+          <label className="text-sm">{label}</label>
+          <input
+            type="datetime-local"
+            value={value ?? ""}
+            onChange={(e) => updateField(key, e.target.value)}
+            className="p-2 rounded border"
+            style={{
+              backgroundColor: "var(--background)",
+              borderColor: "var(--border)",
+            }}
+          />
+        </div>
+      );
+    }
+
+    // NUMBER (decimal fields)
+    const isNumber =
+      def.format === "decimal" ||
+      (typeof value === "string" && !isNaN(Number(value)));
+
+    return (
+      <div key={key} className="flex flex-col gap-1">
+        <label className="text-sm">{label}</label>
+        <input
+          type={isNumber ? "number" : "text"}
+          value={value ?? ""}
+          onChange={(e) =>
+            updateField(key, isNumber ? e.target.value : e.target.value)
+          }
+          className="p-2 rounded border"
+          style={{
+            backgroundColor: "var(--background)",
+            borderColor: "var(--border)",
+          }}
+        />
+      </div>
+    );
   }
 
   return (
@@ -122,95 +207,58 @@ export default function CreateLoanModal({ open, onClose }: CreateLoanModalProps)
       style={{ backdropFilter: "blur(3px)" }}
     >
       <div
-        className="p-6 rounded shadow-lg w-[600px] max-h-[90vh] overflow-y-auto"
+        className="p-8 rounded shadow-lg w-[1000px] max-h-[90vh] overflow-y-auto"
         style={{
           backgroundColor: "var(--panel)",
           color: "var(--foreground)",
           border: "1px solid var(--border)",
         }}
       >
-        <h2 className="text-lg font-semibold mb-4">Create Loan</h2>
+        <h2 className="text-xl font-semibold mb-6">Create Loan</h2>
 
-        <div className="space-y-4">
-          {Object.entries(form).map(([key, value]) => {
-            // Check if this field has an enum definition (check both full key and last part for nested keys)
-            const keyParts = key.split(".");
-            const baseKey = keyParts[keyParts.length - 1];
-            const enumInfo = (enums as any)[key] || (enums as any)[baseKey];
+        {Object.entries(sections).map(([section, keys]) => {
+          const visibleKeys = keys.filter((k) => shouldShowField(k));
+          const hiddenKeys = keys.filter((k) => !shouldShowField(k));
 
-            if (enumInfo?.enum) {
-              // Ensure value is a string for select
-              const selectValue = value != null && typeof value !== "object" ? String(value) : "";
-              
-              return (
-                <div key={key} className="flex flex-col">
-                  <label className="text-sm mb-1">{key}</label>
-                  <select
-                    value={selectValue}
-                    onChange={(e) => updateField(key, e.target.value)}
-                    className="p-2 rounded border"
-                    style={{
-                      backgroundColor: "var(--background)",
-                      borderColor: "var(--border)",
-                      color: "var(--foreground)",
-                    }}
+          return (
+            <div key={section} className="mb-8">
+              <div className="flex justify-between items-center mb-2">
+                <h3 className="text-lg font-semibold">{section}</h3>
+
+                {hiddenKeys.length > 0 && (
+                  <button
+                    onClick={() => toggleSection(section)}
+                    className="text-sm underline"
                   >
-                    <option value="">Select…</option>
-                    {enumInfo.enum.filter((x: string | null) => x !== null).map((option: string) => (
-                      <option key={option} value={option}>
-                        {option}
-                      </option>
-                    ))}
-                  </select>
-                </div>
-              );
-            }
-
-            // Determine input type based on field name or value type
-            const inputType = 
-              key.toLowerCase().includes("email") ? "email" :
-              (typeof value === "number" || (typeof value === "string" && !isNaN(Number(value)) && value.includes("."))) ? "number" :
-              "text";
-
-            // Convert value to string for display (handle numbers, objects, etc.)
-            const displayValue = value != null && typeof value !== "object" ? String(value) : "";
-
-            return (
-              <div key={key} className="flex flex-col">
-                <label className="text-sm mb-1">{key}</label>
-                <input
-                  type={inputType}
-                  value={displayValue}
-                  onChange={(e) => updateField(key, inputType === "number" ? parseFloat(e.target.value) || 0 : e.target.value)}
-                  className="p-2 rounded border"
-                  style={{
-                    backgroundColor: "var(--background)",
-                    borderColor: "var(--border)",
-                    color: "var(--foreground)",
-                  }}
-                />
+                    {expandedSections[section]
+                      ? "Hide Extra Fields"
+                      : `Show ${hiddenKeys.length} More`}
+                  </button>
+                )}
               </div>
-            );
-          })}
-        </div>
 
-        <div className="mt-6 flex justify-end space-x-2">
+              <div className="grid grid-cols-2 gap-4">
+                {visibleKeys.map((key) => renderField(key))}
+              </div>
+            </div>
+          );
+        })}
+
+        <div className="mt-6 flex justify-end gap-2">
           <button
             onClick={onClose}
             className="px-4 py-2 rounded"
             style={{
               backgroundColor: "var(--panel)",
               border: "1px solid var(--border)",
-              color: "var(--foreground)",
             }}
           >
             Cancel
           </button>
-
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-4 py-2 rounded font-medium"
+            className="px-4 py-2 rounded font-semibold"
             style={{
               backgroundColor: "var(--accent)",
               color: "var(--button-text)",
@@ -222,7 +270,8 @@ export default function CreateLoanModal({ open, onClose }: CreateLoanModalProps)
         </div>
 
         {result && (
-          <pre className="mt-4 text-xs whitespace-pre-wrap p-2 rounded"
+          <pre
+            className="mt-6 p-4 text-xs rounded"
             style={{
               backgroundColor: "var(--background)",
               border: "1px solid var(--border)",
