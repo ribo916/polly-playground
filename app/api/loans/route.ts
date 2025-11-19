@@ -17,10 +17,11 @@ export async function POST(request: NextRequest) {
 
     // Step 2: Get the loan payload from request body
     const payload = await request.json();
+console.log(payload);
 
     // Step 3: Call Polly API with Bearer token
     const { data: loanData, status, error } = await logFetch(
-      `${process.env.POLLY_BASE_URL}/api/v2/pe/loans/`,
+      `${process.env.POLLY_BASE_URL}/api/v2/loans/`,
       {
         method: "POST",
         headers: {
@@ -29,7 +30,7 @@ export async function POST(request: NextRequest) {
         },
         body: JSON.stringify(payload),
       },
-      "/api/v2/pe/loans/"
+      "/api/v2/loans/"
     );
 
     if (error) {
