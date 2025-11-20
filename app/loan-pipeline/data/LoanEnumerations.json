@@ -26,6 +26,17 @@
       ]
     },
   
+    "occupancy": {
+      "description": "Property occupancy type",
+      "enum": [
+        "NONE",
+        "PRIMARY",
+        "SECONDARY",
+        "INVESTMENT",
+        null
+      ]
+    },
+
     "vaLoanHistory": {
       "description": "Whether the borrower has previously used their VA entitlement.",
       "enum": [

@@ -1,205 +1,140 @@
 // /app/loan-pipeline/helpers/fieldUtils.ts
 
-/* =============================================================================
- * Types
- * ========================================================================== */
-
 export interface FieldDefinition {
-  key: string;              // e.g. "borrower.firstName"
-  isRequired: boolean;      // top-level swagger required keys only
-  isNullable: boolean;      // sample value === null
-  format?: string | null;   // "decimal", "date", "date-time"
+  key: string;
+  isRequired: boolean;
+  isNullable: boolean;
   enumValues?: (string | null)[] | null;
+  format?: "date" | "date-time" | "decimal" | null;
+  isObject?: boolean;
 }
 
-/* =============================================================================
- * flattenObject
- * ========================================================================== */
+import minimal from "../data/CreateLoanPayload.json";
 
-export function flattenObject(
-  obj: Record<string, any>,
-  prefix = ""
-): Record<string, any> {
-  const out: Record<string, any> = {};
+/**
+ * Pulls a field's value from the minimal payload.
+ */
+export function sampleValueFromMinimal(key: string): any {
+  const parts = key.split(".");
+  let ref: any = minimal;
 
-  for (const [key, value] of Object.entries(obj)) {
-    const full = prefix ? `${prefix}.${key}` : key;
-
-    if (
-      value &&
-      typeof value === "object" &&
-      !Array.isArray(value) &&
-      value !== null
-    ) {
-      Object.assign(out, flattenObject(value, full));
-    } else {
-      out[full] = value;
-    }
+  for (const p of parts) {
+    if (ref == null || typeof ref !== "object") return null;
+    ref = ref[p];
   }
-
-  return out;
+  return ref;
 }
 
-/* =============================================================================
- * unflattenObject
- * ========================================================================== */
-
-export function unflattenObject(flat: Record<string, any>): Record<string, any> {
-  const root: any = {};
-
-  for (const [key, val] of Object.entries(flat)) {
-    const parts = key.split(".");
-    let curr = root;
-
-    for (let i = 0; i < parts.length - 1; i++) {
-      const p = parts[i];
-      if (!curr[p]) curr[p] = {};
-      curr = curr[p];
-    }
-
-    curr[parts[parts.length - 1]] = val;
-  }
-
-  return root;
+/**
+ * Returns true if a value is a plain object (not an array).
+ */
+function isPlainObject(val: any) {
+  return val && typeof val === "object" && !Array.isArray(val);
 }
 
-/* =============================================================================
- * ensureCustomValues
- * ========================================================================== */
-
-export function ensureCustomValues(obj: Record<string, any>) {
-  if (obj["customValues"] === undefined || obj["customValues"] === null) {
-    obj["customValues"] = {};
-  }
-}
-
-/* =============================================================================
- * humanizeLabel (Pascal Case, only the last segment)
- * ========================================================================== */
-
+/**
+ * Humanize labels like "borrower.lastName" → "Borrower Last Name"
+ */
 export function humanizeLabel(key: string): string {
-  const last = key.split(".").pop() || key;
+  const parts = key.split(".");
+  const last = parts[parts.length - 1];
+
   return last
     .replace(/([A-Z])/g, " $1")
-    .replace(/^./, (c) => c.toUpperCase())
-    .trim();
+    .replace(/\s+/g, " ")
+    .trim()
+    .replace(/^./, (c) => c.toUpperCase());
 }
 
-/* =============================================================================
- * deriveFieldDefinitions
+/**
+ * ---------------------------------------------------------------------------
+ * deriveFieldDefinitions()
  *
- * The corrected part is the REQUIRED logic:
+ * Creates a flat list of FieldDefinition entries for every field
+ * in both the minimal sample payload AND enum metadata.
  *
- * ❌ Before (bug):
- *    All nested keys under borrower/property/loanofficer were required.
- *
- * ✅ After (correct):
- *    Only top-level swagger-required keys are required.
- *    Nested fields are NEVER required.
- *
- * ========================================================================== */
-
+ * Fix for Bug #5:
+ * - If enums metadata contains a key, we ALWAYS treat it as an enum field,
+ *   regardless of sample value.
+ * ---------------------------------------------------------------------------
+ */
 export function deriveFieldDefinitions(
-  sample: Record<string, any>,
-  enumMap: Record<string, any>
+  sample: any,
+  enums: Record<string, any>
 ): FieldDefinition[] {
-  const flatSample = flattenObject(sample);
-
-  // Match EXACT swagger top-level required list
-  const requiredTopLevel: string[] = [
-    "amortizationType",
-    "amount",
-    "aus",
-    "borrower",
-    "cashOutAmount",
-    "cltv",
-    "customValues",
-    "documentationType",
-    "externalCreatedAt",
-    "externalModifiedAt",
-    "fhaTotalLoanAmount",
-    "fundedAt",
-    "hcltv",
-    "helocDrawAmount",
-    "helocLineAmount",
-    "impoundType",
-    "isMortgageInsurancePaidByBorrower",
-    "isRelocationLoan",
-    "isSecondCommunityLoan",
-    "isSecondInvestorSameAsFirst",
-    "isSecondPiggyback",
-    "lenderFee",
-    "loanNumber",
-    "loanTerm",
-    "loanType",
-    "loanofficer",
-    "losLoanId",
-    "ltv",
-    "position",
-    "prepaymentPenaltyPeriodMonths",
-    "productCode",
-    "productName",
-    "property",
-    "propertyValue",
-    "purchasePrice",
-    "purpose",
-    "rate",
-    "refinancePurpose",
-    "rollLenderFee",
-    "secondAmount",
-    "temporaryBuydownType",
-    "usdaTotalLoanAmount",
-    "vaTotalLoanAmount",
-  ];
-
-  const swaggerRequired = new Set(requiredTopLevel);
-
-  // Grab enum values from LoanEnumerations.json
-  const enumLookup: Record<string, (string | null)[] | null> = {};
-  for (const [k, v] of Object.entries(enumMap)) {
-    if (v.enum) enumLookup[k] = v.enum;
-  }
-
   const defs: FieldDefinition[] = [];
 
-  for (const key of Object.keys(flatSample)) {
-    const rawValue = flatSample[key];
-    const last = key.split(".").pop()!;
+  function walk(prefix: string, obj: any) {
+    if (!isPlainObject(obj)) return;
 
-    // ------------------------------------------
-    // HERE IS THE FIX:
-    // A field is required ONLY if:
-    // - it is TOP-LEVEL (no dot)
-    // - AND its name is in swagger's required list
-    // ------------------------------------------
-    const isTopLevel = !key.includes(".");
-    const isRequired =
-      isTopLevel && swaggerRequired.has(key); // use full key (e.g., "borrower")
+    for (const key of Object.keys(obj)) {
+      const fullKey = prefix ? `${prefix}.${key}` : key;
+      const value = obj[key];
 
-    // Enum detection
-    const enumValues =
-      enumLookup[key] ?? enumLookup[last] ?? null;
+      const enumInfo = enums[key] || enums[fullKey] || null;
 
-    // Format detection for sample values
-    let format: string | null = null;
-    if (typeof rawValue === "string") {
-      if (rawValue.match(/^\d{4}-\d{2}-\d{2}$/)) {
-        format = "date";
-      } else if (rawValue.includes("T")) {
-        format = "date-time";
-      } else if (!isNaN(Number(rawValue))) {
-        format = "decimal";
+      const isObject = isPlainObject(value);
+
+      // Detect nullability: null in sample ⇒ nullable
+      const isNullable = value === null;
+
+      // True "required" based on minimal payload (null allowed if required+nullable)
+      const isRequired = value !== undefined;
+
+      let format: "date" | "date-time" | "decimal" | null = null;
+
+      if (typeof value === "string") {
+        if (/\d{4}-\d{2}-\d{2}T/.test(value)) format = "date-time";
+        else if (/^\d{4}-\d{2}-\d{2}$/.test(value)) format = "date";
+        else if (/^-?\d+\.\d+$/.test(value)) format = "decimal";
       }
-    }
 
-    defs.push({
-      key,
-      isRequired,
-      isNullable: rawValue === null,
-      enumValues,
-      format,
-    });
+      defs.push({
+        key: fullKey,
+        isRequired,
+        isNullable,
+        enumValues: enumInfo?.enum ?? null,
+        format,
+        isObject,
+      });
+
+      // Recurse if nested
+      if (isObject) walk(fullKey, value);
+    }
   }
 
+  walk("", sample);
+
   return defs;
+}
+
+/**
+ * Convert flattened key-value map to nested object.
+ */
+export function unflattenObject(flat: Record<string, any>): any {
+  const result: any = {};
+
+  for (const key of Object.keys(flat)) {
+    const parts = key.split(".");
+    let node = result;
+
+    for (let i = 0; i < parts.length; i++) {
+      const part = parts[i];
+      if (i === parts.length - 1) {
+        node[part] = flat[key];
+      } else {
+        node[part] = node[part] || {};
+        node = node[part];
+      }
+    }
+  }
+
+  return result;
+}
+
+/**
+ * Enforces presence of customValues on final payload.
+ */
+export function ensureCustomValues(payload: any) {
+  if (!payload.customValues) payload.customValues = {};
 }

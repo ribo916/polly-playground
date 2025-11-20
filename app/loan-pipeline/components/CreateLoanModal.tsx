@@ -1,29 +1,38 @@
 "use client";
 
 import { useState } from "react";
+
 import {
   deriveFieldDefinitions,
   humanizeLabel,
 } from "../helpers/fieldUtils";
+
 import {
-  generateInitialFormFromConfig,
-  buildPayloadFromForm,
+  buildInitialFormState,
+  mergeFormIntoPayload,
 } from "../helpers/payloadBuilder";
-import sample from "@/app/loan-pipeline/data/CreateLoanPayload.json";
-import enums from "@/app/loan-pipeline/data/LoanEnumerations.json";
-import { createLoanAction } from "../actions/createLoanAction";
 
-// Section map based on parent JSON paths
-const SECTION_MAP: Record<string, string> = {
-  borrower: "Borrower",
-  property: "Property",
-  loanofficer: "Loan Officer",
-};
+import enums from "../data/LoanEnumerations.json";
+import sample from "../data/CreateLoanPayload.json";
 
-function getSectionForField(key: string): string {
-  const parts = key.split(".");
-  const top = parts[0];
-  return SECTION_MAP[top] ?? "Loan";
+// UI helpers
+function SectionToggle({
+  title,
+  expanded,
+  onToggle,
+}: {
+  title: string;
+  expanded: boolean;
+  onToggle: () => void;
+}) {
+  return (
+    <button
+      onClick={onToggle}
+      className="text-sm text-blue-500 hover:underline mb-1"
+    >
+      {expanded ? `Hide ${title} Fields` : `Show More ${title} Fields`}
+    </button>
+  );
 }
 
 export default function CreateLoanModal({
@@ -33,232 +42,267 @@ export default function CreateLoanModal({
   open: boolean;
   onClose: () => void;
 }) {
-  // Build field definitions from swagger + sample
+  if (!open) return null;
+
+  // Derive all metadata
   const fieldDefs = deriveFieldDefinitions(sample, enums);
 
-  // Generate the initial form (only required non-nullable + sample non-null)
-  const [form, setForm] = useState<Record<string, any>>(() =>
-    generateInitialFormFromConfig(fieldDefs, sample)
+  // Partition into sections
+  const loanFields = fieldDefs.filter(
+    (f) =>
+      !f.key.startsWith("borrower.") &&
+      !f.key.startsWith("property.") &&
+      !f.key.startsWith("loanofficer.")
   );
 
-  const [expandedSections, setExpandedSections] = useState<
-    Record<string, boolean>
-  >({});
+  const borrowerFields = fieldDefs.filter((f) =>
+    f.key.startsWith("borrower.")
+  );
+
+  const propertyFields = fieldDefs.filter((f) =>
+    f.key.startsWith("property.")
+  );
+
+  const loanOfficerFields = fieldDefs.filter((f) =>
+    f.key.startsWith("loanofficer.")
+  );
+
+  // Required initial defaults only
+  const initialForm = buildInitialFormState(fieldDefs);
+
+  const [form, setForm] = useState<Record<string, any>>(initialForm);
+
+  // Expand state per section
+  const [loanExpanded, setLoanExpanded] = useState(false);
+  const [borrowerExpanded, setBorrowerExpanded] = useState(false);
+  const [propertyExpanded, setPropertyExpanded] = useState(false);
+  const [loanOfficerExpanded, setLoanOfficerExpanded] = useState(false);
+
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
-  if (!open) return null;
-
-  function toggleSection(section: string) {
-    setExpandedSections((prev) => ({
-      ...prev,
-      [section]: !prev[section],
-    }));
-  }
-
   function updateField(key: string, value: any) {
-    setForm((prev) => ({ ...prev, [key]: value }));
+    setForm((prev) => ({
+      ...prev,
+      [key]: value,
+    }));
   }
 
   async function handleSubmit() {
     setLoading(true);
 
-    const payload = buildPayloadFromForm(fieldDefs, form, sample);
-    const res = await createLoanAction(payload);
+    const payload = mergeFormIntoPayload(form, fieldDefs);
 
+    // Correct route
+    const res = await fetch("/api/loans", {
+      method: "POST",
+      body: JSON.stringify(payload),
+      headers: { "Content-Type": "application/json" },
+    });
+
+    const json = await res.json();
     setLoading(false);
-    setResult(res);
+    setResult(json);
 
-    if (res.ok) {
+    if (json?.ok) {
       setTimeout(() => onClose(), 1200);
     }
   }
 
-  // Group fields into sections
-  const sections: Record<string, string[]> = {};
-  for (const def of fieldDefs) {
-    const section = getSectionForField(def.key);
-    if (!sections[section]) sections[section] = [];
-    sections[section].push(def.key);
-  }
+  /* --------------------------------------------
+   * Field Rendering
+   * -------------------------------------------- */
+  function renderField(def: any) {
+    const value = form[def.key] ?? "";
 
-  function shouldShowField(key: string): boolean {
-    const section = getSectionForField(key);
-    const def = fieldDefs.find((d) => d.key === key);
+    if (def.isObject) return null;
 
-    if (!def) return false;
+    // ENUM FIELD — always renders select when enumValues exist
+    if (def.enumValues && Array.isArray(def.enumValues)) {
+      const cleanedEnum = def.enumValues.filter((v: any) => v !== null);
 
-    // Required + non-nullable are ALWAYS shown
-    if (def.isRequired && !def.isNullable) return true;
-
-    // Required + nullable → shown (visible in first view)
-    if (def.isRequired && def.isNullable) return true;
-
-    // Sample has non-null value → show by default
-    const sampleFlat = sample; // Already flattened inside fieldDefs
-    // BUT we rely on fieldUtils flatten logic → use form: form contains default visible
-    if (form[key] !== undefined) return true;
-
-    // Otherwise only if section expanded
-    return expandedSections[section] === true;
-  }
-
-  function renderField(key: string) {
-    const def = fieldDefs.find((d) => d.key === key);
-    if (!def) return null;
-
-    const label = humanizeLabel(key);
-    const enumInfo = def.enumValues;
-    const value = form[key];
-
-    // ENUM → dropdown
-    if (enumInfo) {
       return (
-        <div key={key} className="flex flex-col gap-1">
-          <label className="text-sm">{label}</label>
+        <div key={def.key} className="flex flex-col">
+          <label className="text-xs font-medium mb-1">
+            {humanizeLabel(def.key)}
+            {def.isRequired && !def.isNullable ? " *" : ""}
+          </label>
+
           <select
-            value={value ?? ""}
-            onChange={(e) =>
-              updateField(key, e.target.value === "" ? null : e.target.value)
-            }
-            className="p-2 rounded border"
-            style={{
-              backgroundColor: "var(--background)",
-              borderColor: "var(--border)",
-            }}
+            value={value}
+            onChange={(e) => updateField(def.key, e.target.value)}
+            className="border rounded p-2 bg-background text-foreground"
           >
-            <option value="">Select…</option>
-            {enumInfo.map((opt: string | null) =>
-              opt === null ? null : (
-                <option key={opt} value={opt}>
-                  {opt}
-                </option>
-              )
-            )}
+            {!def.isRequired || def.isNullable ? (
+              <option value="">Select…</option>
+            ) : null}
+            {cleanedEnum.map((v: any) => (
+              <option key={v} value={v}>
+                {v}
+              </option>
+            ))}
           </select>
         </div>
       );
     }
 
-    // DATE / DATETIME
+    // Date-only
     if (def.format === "date") {
       return (
-        <div key={key} className="flex flex-col gap-1">
-          <label className="text-sm">{label}</label>
+        <div key={def.key} className="flex flex-col">
+          <label className="text-xs font-medium mb-1">
+            {humanizeLabel(def.key)}
+            {def.isRequired && !def.isNullable ? " *" : ""}
+          </label>
+
           <input
             type="date"
-            value={value ?? ""}
-            onChange={(e) => updateField(key, e.target.value)}
-            className="p-2 rounded border"
-            style={{
-              backgroundColor: "var(--background)",
-              borderColor: "var(--border)",
-            }}
+            value={value}
+            onChange={(e) => updateField(def.key, e.target.value)}
+            className="border rounded p-2 bg-background text-foreground"
           />
         </div>
       );
     }
 
+    // Date-time
     if (def.format === "date-time") {
       return (
-        <div key={key} className="flex flex-col gap-1">
-          <label className="text-sm">{label}</label>
+        <div key={def.key} className="flex flex-col">
+          <label className="text-xs font-medium mb-1">
+            {humanizeLabel(def.key)}
+            {def.isRequired && !def.isNullable ? " *" : ""}
+          </label>
+
           <input
             type="datetime-local"
-            value={value ?? ""}
-            onChange={(e) => updateField(key, e.target.value)}
-            className="p-2 rounded border"
-            style={{
-              backgroundColor: "var(--background)",
-              borderColor: "var(--border)",
-            }}
+            value={value.replace("Z", "")}
+            onChange={(e) =>
+              updateField(def.key, e.target.value + "Z")
+            }
+            className="border rounded p-2 bg-background text-foreground"
           />
         </div>
       );
     }
 
-    // NUMBER (decimal fields)
-    const isNumber =
-      def.format === "decimal" ||
-      (typeof value === "string" && !isNaN(Number(value)));
+    // Numeric
+    if (def.format === "decimal") {
+      return (
+        <div key={def.key} className="flex flex-col">
+          <label className="text-xs font-medium mb-1">
+            {humanizeLabel(def.key)}
+            {def.isRequired && !def.isNullable ? " *" : ""}
+          </label>
 
+          <input
+            type="number"
+            step="0.01"
+            value={value}
+            onChange={(e) => updateField(def.key, e.target.value)}
+            className="border rounded p-2 bg-background text-foreground"
+          />
+        </div>
+      );
+    }
+
+    // Text default
     return (
-      <div key={key} className="flex flex-col gap-1">
-        <label className="text-sm">{label}</label>
+      <div key={def.key} className="flex flex-col">
+        <label className="text-xs font-medium mb-1">
+          {humanizeLabel(def.key)}
+          {def.isRequired && !def.isNullable ? " *" : ""}
+        </label>
+
         <input
-          type={isNumber ? "number" : "text"}
-          value={value ?? ""}
-          onChange={(e) =>
-            updateField(key, isNumber ? e.target.value : e.target.value)
-          }
-          className="p-2 rounded border"
-          style={{
-            backgroundColor: "var(--background)",
-            borderColor: "var(--border)",
-          }}
+          type="text"
+          value={value}
+          onChange={(e) => updateField(def.key, e.target.value)}
+          className="border rounded p-2 bg-background text-foreground"
         />
       </div>
     );
   }
 
+  /* --------------------------------------------
+   * Section Utility
+   * -------------------------------------------- */
+  function sectionFields(defs: any[], expanded: boolean) {
+    return defs.filter((f) =>
+      expanded ? true : f.isRequired && !f.isNullable
+    );
+  }
+
+  /* --------------------------------------------
+   * Layout
+   * -------------------------------------------- */
   return (
-    <div
-      className="fixed inset-0 bg-black/40 flex items-center justify-center"
-      style={{ backdropFilter: "blur(3px)" }}
-    >
-      <div
-        className="p-8 rounded shadow-lg w-[1000px] max-h-[90vh] overflow-y-auto"
-        style={{
-          backgroundColor: "var(--panel)",
-          color: "var(--foreground)",
-          border: "1px solid var(--border)",
-        }}
-      >
-        <h2 className="text-xl font-semibold mb-6">Create Loan</h2>
+    <div className="fixed inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm">
+      <div className="p-6 rounded shadow-lg w-[800px] max-h-[90vh] overflow-y-auto bg-panel text-foreground border border-border">
 
-        {Object.entries(sections).map(([section, keys]) => {
-          const visibleKeys = keys.filter((k) => shouldShowField(k));
-          const hiddenKeys = keys.filter((k) => !shouldShowField(k));
+        <h2 className="text-lg font-semibold mb-4">Create Loan</h2>
 
-          return (
-            <div key={section} className="mb-8">
-              <div className="flex justify-between items-center mb-2">
-                <h3 className="text-lg font-semibold">{section}</h3>
+        {/* Loan Section */}
+        <h3 className="font-semibold text-md mt-4 mb-2">Loan</h3>
+        <SectionToggle
+          title="Loan"
+          expanded={loanExpanded}
+          onToggle={() => setLoanExpanded(!loanExpanded)}
+        />
+        <div className="grid grid-cols-2 gap-4">
+          {sectionFields(loanFields, loanExpanded).map(renderField)}
+        </div>
 
-                {hiddenKeys.length > 0 && (
-                  <button
-                    onClick={() => toggleSection(section)}
-                    className="text-sm underline"
-                  >
-                    {expandedSections[section]
-                      ? "Hide Extra Fields"
-                      : `Show ${hiddenKeys.length} More`}
-                  </button>
-                )}
-              </div>
+        {/* Loan Officer */}
+        <h3 className="font-semibold text-md mt-6 mb-2">Loan Officer</h3>
+        <SectionToggle
+          title="Loan Officer"
+          expanded={loanOfficerExpanded}
+          onToggle={() => setLoanOfficerExpanded(!loanOfficerExpanded)}
+        />
+        <div className="grid grid-cols-2 gap-4">
+          {sectionFields(loanOfficerFields, loanOfficerExpanded).map(renderField)}
+        </div>
 
-              <div className="grid grid-cols-2 gap-4">
-                {visibleKeys.map((key) => renderField(key))}
-              </div>
-            </div>
-          );
-        })}
+        {/* Borrower */}
+        <h3 className="font-semibold text-md mt-6 mb-2">Borrower</h3>
+        <SectionToggle
+          title="Borrower"
+          expanded={borrowerExpanded}
+          onToggle={() => setBorrowerExpanded(!borrowerExpanded)}
+        />
+        <div className="grid grid-cols-2 gap-4">
+          {sectionFields(borrowerFields, borrowerExpanded).map(renderField)}
+        </div>
 
-        <div className="mt-6 flex justify-end gap-2">
+        {/* Property */}
+        <h3 className="font-semibold text-md mt-6 mb-2">Property</h3>
+        <SectionToggle
+          title="Property"
+          expanded={propertyExpanded}
+          onToggle={() => setPropertyExpanded(!propertyExpanded)}
+        />
+        <div className="grid grid-cols-2 gap-4">
+          {sectionFields(propertyFields, propertyExpanded).map(renderField)}
+        </div>
+
+        {/* Buttons */}
+        <div className="mt-6 flex justify-end space-x-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded"
+            className="px-4 py-2 rounded font-medium transition border border-border"
             style={{
               backgroundColor: "var(--panel)",
-              border: "1px solid var(--border)",
+              color: "var(--foreground)"
             }}
           >
             Cancel
           </button>
+
           <button
             onClick={handleSubmit}
             disabled={loading}
-            className="px-4 py-2 rounded font-semibold"
+            className="px-4 py-2 rounded font-medium transition"
             style={{
               backgroundColor: "var(--accent)",
               color: "var(--button-text)",
@@ -270,13 +314,7 @@ export default function CreateLoanModal({
         </div>
 
         {result && (
-          <pre
-            className="mt-6 p-4 text-xs rounded"
-            style={{
-              backgroundColor: "var(--background)",
-              border: "1px solid var(--border)",
-            }}
-          >
+          <pre className="mt-4 text-xs whitespace-pre-wrap p-2 rounded bg-background border border-border">
             {JSON.stringify(result, null, 2)}
           </pre>
         )}

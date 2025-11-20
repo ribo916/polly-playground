@@ -41,7 +41,8 @@
     "vaTotalLoanAmount": null,
     "loanofficer": {
         "email": "string",
-        "name": "string"
+        "name": "string",
+        "assistantEmail": null
     },
     "borrower": {
         "assetDepletionAmount": null,

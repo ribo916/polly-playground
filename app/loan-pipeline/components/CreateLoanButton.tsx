@@ -19,7 +19,12 @@ export default function CreateLoanButton() {
         + Create Loan
       </button>
 
-      <CreateLoanModal open={open} onClose={() => setOpen(false)} />
+      {open && (
+        <CreateLoanModal
+          open={open}
+          onClose={() => setOpen(false)}
+        />
+      )}
     </>
   );
 }
