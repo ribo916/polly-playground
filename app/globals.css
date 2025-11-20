@@ -1,31 +1,36 @@
 @import "tailwindcss";
 
+/* ---------------------------------------------------------------------------
+   GLOBAL THEME SYSTEM
+   --------------------------------------------------------------------------- */
 @layer base {
   :root {
     color-scheme: light dark;
 
-    /* 🎨 Light theme palette (light shades of grey) */
-    --bg-light: #F5F5F5;      /* light gray background */
-    --text-light: #1A1A1A;    /* dark gray text */
-    --panel-light: #FFFFFF;   /* white panels */
-    --border-light: #D0D0D0;  /* medium gray border */
-    --muted-light: #6B6B6B;   /* muted text */
-    --accent-light: #005b6f;  /* teal accent */
-    --accent-hover-light: #007b8f; /* lighter teal on hover */
-    --border: #ccc;
+    /* 🎨 LIGHT THEME TOKENS */
+    --bg-light: #F5F5F5;
+    --text-light: #1A1A1A;
+    --panel-light: #FFFFFF;
+    --border-light: #D0D0D0;
+    --muted-light: #6B6B6B;
+    --accent-light: #005b6f;
+    --accent-hover-light: #007b8f;
+    --overlay-light: rgba(0, 0, 0, 0.25);
 
-    /* 🌑 Dark theme palette */
-    --bg-dark: #1E1E1E;       /* dark gray background */
-    --text-dark: #E5E5E5;     /* light gray text */
-    --panel-dark: #2D2D2D;    /* slightly lighter dark gray panels */
-    --border-dark: #404040;   /* medium gray border */
-    --muted-dark: #A0A0A0;    /* muted gray text */
-    --accent-dark: #01FFF1;   /* turquoise accent */
-    --accent-hover-dark: #7FFFF8; /* lighter turquoise on hover */
-    --border: #333;
+    /* 🌑 DARK THEME TOKENS */
+    --bg-dark: #1E1E1E;
+    --text-dark: #E5E5E5;
+    --panel-dark: #2D2D2D;
+    --border-dark: #404040;
+    --muted-dark: #A0A0A0;
+    --accent-dark: #01FFF1;
+    --accent-hover-dark: #7FFFF8;
+    --overlay-dark: rgba(0, 0, 0, 0.6);
   }
 
-  /* Active theme mapping */
+  /* ---------------------------------------------------------------
+     ACTIVE LIGHT THEME VALUES
+     --------------------------------------------------------------- */
   [style*="color-scheme: light"] {
     --background: var(--bg-light);
     --foreground: var(--text-light);
@@ -34,10 +39,14 @@
     --muted: var(--muted-light);
     --accent: var(--accent-light);
     --accent-hover: var(--accent-hover-light);
-    --title-color: #000000;    /* black title in light mode */
-    --button-text: #ffffff;    /* ✅ white text on buttons */
+    --title-color: #000000;
+    --button-text: #ffffff;
+    --overlay: var(--overlay-light);
   }
 
+  /* ---------------------------------------------------------------
+     ACTIVE DARK THEME VALUES
+     --------------------------------------------------------------- */
   [style*="color-scheme: dark"] {
     --background: var(--bg-dark);
     --foreground: var(--text-dark);
@@ -46,11 +55,14 @@
     --muted: var(--muted-dark);
     --accent: var(--accent-dark);
     --accent-hover: var(--accent-hover-dark);
-    --title-color: #01FFF1;    /* turquoise title in dark mode */
-    --button-text: #000000;    /* ✅ black text on buttons */
+    --title-color: #01FFF1;
+    --button-text: #000000;
+    --overlay: var(--overlay-dark);
   }
 
-  /* Base layout */
+  /* ----------------------------------------------------------------
+     BASE ELEMENTS
+     ---------------------------------------------------------------- */
   body {
     background-color: var(--background);
     color: var(--foreground);
@@ -60,7 +72,7 @@
     line-height: 1.6;
   }
 
-  /* API / code output panel */
+  /* Code blocks */
   pre {
     background-color: var(--panel);
     color: var(--foreground);
@@ -71,15 +83,52 @@
     box-shadow: 0 1px 3px rgba(0, 0, 0, 0.1);
   }
 
-  /* ✅ Link styling — readable in both themes */
+  /* Links */
   a {
     color: var(--accent);
-    text-decoration: none;               /* removes underline */
-    transition: color 0.2s ease, text-decoration-color 0.2s ease;
+    text-decoration: none;
+    transition: color 0.2s ease;
   }
 
   a:hover {
     color: var(--accent-hover);
-    text-decoration: none;               /* stay clean on hover */
   }
+}
+
+/* ======================================================================== */
+/*  🔧 FINAL SELECT FIX — OUTSIDE @layer SO TAILWIND CANNOT OVERRIDE IT     */
+/* ======================================================================== */
+
+select,
+select:not([class]) {
+  appearance: none !important;
+
+  background-color: var(--panel) !important;
+  color: var(--foreground) !important;
+
+  /* Strong, crisp border to match inputs */
+  border-width: 1px !important;
+  border-style: solid !important;
+  border-color: var(--border) !important;
+
+  /* Match rounded-md */
+  border-radius: 0.375rem !important;
+
+  /* Match input padding */
+  padding: 0.5rem 0.75rem !important;
+
+  /* Space for future custom arrow */
+  padding-right: 1.75rem !important;
+
+  line-height: 1.5 !important;
+}
+
+select:focus {
+  outline: none !important;
+  border-color: var(--accent) !important;
+}
+
+select option {
+  background-color: var(--panel) !important;
+  color: var(--foreground) !important;
 }

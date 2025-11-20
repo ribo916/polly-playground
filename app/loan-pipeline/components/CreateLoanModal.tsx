@@ -67,17 +67,13 @@ export default function CreateLoanModal({
     f.key.startsWith("loanofficer.")
   );
 
-  // Required initial defaults only
   const initialForm = buildInitialFormState(fieldDefs);
 
   const [form, setForm] = useState<Record<string, any>>(initialForm);
-
-  // Expand state per section
   const [loanExpanded, setLoanExpanded] = useState(false);
   const [borrowerExpanded, setBorrowerExpanded] = useState(false);
   const [propertyExpanded, setPropertyExpanded] = useState(false);
   const [loanOfficerExpanded, setLoanOfficerExpanded] = useState(false);
-
   const [loading, setLoading] = useState(false);
   const [result, setResult] = useState<any>(null);
 
@@ -93,7 +89,6 @@ export default function CreateLoanModal({
 
     const payload = mergeFormIntoPayload(form, fieldDefs);
 
-    // Correct route
     const res = await fetch("/api/loans", {
       method: "POST",
       body: JSON.stringify(payload),
@@ -109,17 +104,14 @@ export default function CreateLoanModal({
     }
   }
 
-  /* --------------------------------------------
-   * Field Rendering
-   * -------------------------------------------- */
   function renderField(def: any) {
     const value = form[def.key] ?? "";
 
     if (def.isObject) return null;
 
-    // ENUM FIELD — always renders select when enumValues exist
+    // ENUM FIELD
     if (def.enumValues && Array.isArray(def.enumValues)) {
-      const cleanedEnum = def.enumValues.filter((v: any) => v !== null);
+      const cleaned = def.enumValues.filter((v: any) => v !== null);
 
       return (
         <div key={def.key} className="flex flex-col">
@@ -131,12 +123,12 @@ export default function CreateLoanModal({
           <select
             value={value}
             onChange={(e) => updateField(def.key, e.target.value)}
-            className="border rounded p-2 bg-background text-foreground"
+            className="rounded p-2"
           >
             {!def.isRequired || def.isNullable ? (
               <option value="">Select…</option>
             ) : null}
-            {cleanedEnum.map((v: any) => (
+            {cleaned.map((v: string) => (
               <option key={v} value={v}>
                 {v}
               </option>
@@ -146,7 +138,7 @@ export default function CreateLoanModal({
       );
     }
 
-    // Date-only
+    // DATE FIELD
     if (def.format === "date") {
       return (
         <div key={def.key} className="flex flex-col">
@@ -154,18 +146,17 @@ export default function CreateLoanModal({
             {humanizeLabel(def.key)}
             {def.isRequired && !def.isNullable ? " *" : ""}
           </label>
-
           <input
             type="date"
             value={value}
             onChange={(e) => updateField(def.key, e.target.value)}
-            className="border rounded p-2 bg-background text-foreground"
+            className="border rounded p-2 bg-panel text-foreground"
           />
         </div>
       );
     }
 
-    // Date-time
+    // DATE-TIME FIELD
     if (def.format === "date-time") {
       return (
         <div key={def.key} className="flex flex-col">
@@ -173,20 +164,17 @@ export default function CreateLoanModal({
             {humanizeLabel(def.key)}
             {def.isRequired && !def.isNullable ? " *" : ""}
           </label>
-
           <input
             type="datetime-local"
             value={value.replace("Z", "")}
-            onChange={(e) =>
-              updateField(def.key, e.target.value + "Z")
-            }
-            className="border rounded p-2 bg-background text-foreground"
+            onChange={(e) => updateField(def.key, e.target.value + "Z")}
+            className="border rounded p-2 bg-panel text-foreground"
           />
         </div>
       );
     }
 
-    // Numeric
+    // DECIMAL FIELD
     if (def.format === "decimal") {
       return (
         <div key={def.key} className="flex flex-col">
@@ -194,52 +182,53 @@ export default function CreateLoanModal({
             {humanizeLabel(def.key)}
             {def.isRequired && !def.isNullable ? " *" : ""}
           </label>
-
           <input
             type="number"
             step="0.01"
             value={value}
             onChange={(e) => updateField(def.key, e.target.value)}
-            className="border rounded p-2 bg-background text-foreground"
+            className="border rounded p-2 bg-panel text-foreground"
           />
         </div>
       );
     }
 
-    // Text default
+    // TEXT INPUT
     return (
       <div key={def.key} className="flex flex-col">
         <label className="text-xs font-medium mb-1">
           {humanizeLabel(def.key)}
           {def.isRequired && !def.isNullable ? " *" : ""}
         </label>
-
         <input
           type="text"
           value={value}
           onChange={(e) => updateField(def.key, e.target.value)}
-          className="border rounded p-2 bg-background text-foreground"
+          className="border rounded p-2 bg-panel text-foreground"
         />
       </div>
     );
   }
 
-  /* --------------------------------------------
-   * Section Utility
-   * -------------------------------------------- */
   function sectionFields(defs: any[], expanded: boolean) {
     return defs.filter((f) =>
       expanded ? true : f.isRequired && !f.isNullable
     );
   }
 
-  /* --------------------------------------------
-   * Layout
-   * -------------------------------------------- */
   return (
-    <div className="fixed inset-0 bg-black/40 flex items-center justify-center backdrop-blur-sm">
-      <div className="p-6 rounded shadow-lg w-[800px] max-h-[90vh] overflow-y-auto bg-panel text-foreground border border-border">
-
+    <div
+      className="fixed inset-0 flex items-center justify-center backdrop-blur-sm"
+      style={{ backgroundColor: "var(--overlay)" }}
+    >
+      <div
+        className="p-6 rounded shadow-lg w-[800px] max-h-[90vh] overflow-y-auto border"
+        style={{
+          backgroundColor: "var(--panel)",
+          borderColor: "var(--border)",
+          color: "var(--foreground)",
+        }}
+      >
         <h2 className="text-lg font-semibold mb-4">Create Loan</h2>
 
         {/* Loan Section */}
@@ -290,10 +279,11 @@ export default function CreateLoanModal({
         <div className="mt-6 flex justify-end space-x-2">
           <button
             onClick={onClose}
-            className="px-4 py-2 rounded font-medium transition border border-border"
+            className="px-4 py-2 rounded font-medium transition border"
             style={{
               backgroundColor: "var(--panel)",
-              color: "var(--foreground)"
+              borderColor: "var(--border)",
+              color: "var(--foreground)",
             }}
           >
             Cancel
@@ -314,7 +304,13 @@ export default function CreateLoanModal({
         </div>
 
         {result && (
-          <pre className="mt-4 text-xs whitespace-pre-wrap p-2 rounded bg-background border border-border">
+          <pre className="mt-4 text-xs whitespace-pre-wrap rounded border"
+            style={{
+              backgroundColor: "var(--background)",
+              borderColor: "var(--border)",
+              color: "var(--foreground)",
+            }}
+          >
             {JSON.stringify(result, null, 2)}
           </pre>
         )}
