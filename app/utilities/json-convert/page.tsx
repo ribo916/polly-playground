@@ -115,7 +115,7 @@ export default function JsonConvertPage() {
             color: "var(--button-text)",
           }}
           >
-            1. UI/PE3 → pricingScenario
+            1. OldUI → pricingScenario
           </button>
           <button
             onClick={() => {
@@ -209,38 +209,67 @@ export default function JsonConvertPage() {
           </div>
         </div>
 
-        <div className="flex gap-3 justify-center">
+        <div className="flex gap-3 justify-center mt-6">
+          {/* Convert */}
           <button
             onClick={handleConvert}
-            className="px-8 py-3 rounded-lg font-semibold text-base transition-all hover:transform hover:-translate-y-0.5"
+            className="px-6 py-2.5 rounded-lg font-medium transition-all"
             style={{
-              background: 'linear-gradient(135deg, var(--accent) 0%, #764ba2 100%)',
-              color: 'var(--button-text)'
+              backgroundColor: 'var(--panel)',
+              color: 'var(--foreground)',
+              border: '1.5px solid var(--border)',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--muted-bg)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--panel)';
             }}
           >
-            🔄 Convert
+            Convert
           </button>
+
+          {/* Copy */}
           <button
             onClick={handleCopy}
-            className="px-8 py-3 rounded-lg font-semibold text-base transition-all"
+            className="px-6 py-2.5 rounded-lg font-medium transition-all"
             style={{
-              backgroundColor: '#28a745',
-              color: 'white'
+              backgroundColor: 'var(--panel)',
+              color: 'var(--foreground)',
+              border: '1.5px solid var(--border)',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--muted-bg)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--panel)';
             }}
           >
-            📋 Copy Output
+            Copy Output
           </button>
+
+          {/* Clear */}
           <button
             onClick={handleClear}
-            className="px-8 py-3 rounded-lg font-semibold text-base transition-all"
+            className="px-6 py-2.5 rounded-lg font-medium transition-all"
             style={{
-              backgroundColor: '#6c757d',
-              color: 'white'
+              backgroundColor: 'var(--panel)',
+              color: 'var(--foreground)',
+              border: '1.5px solid var(--border)',
+              boxShadow: 'var(--shadow-sm)',
+            }}
+            onMouseEnter={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--muted-bg)';
+            }}
+            onMouseLeave={(e) => {
+              e.currentTarget.style.backgroundColor = 'var(--panel)';
             }}
           >
-            🗑️ Clear
+            Clear
           </button>
-        </div>
+          </div>
 
         {message && (
           <div

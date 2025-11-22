@@ -6,46 +6,59 @@
 @layer base {
   :root {
     color-scheme: light dark;
-
-    /* 🎨 LIGHT THEME TOKENS */
-    --bg-light: #FAFAFA;
-    --bg-secondary-light: #F5F5F5;
+  
+    /* LIGHT THEME — darker, softer, less white */
+    --bg-light: #ECEDEF;              /* darker base background */
+    --bg-secondary-light: #E2E3E5;    /* slightly darker secondary */
     --text-light: #1A1A1A;
-    --text-secondary-light: #4A4A4A;
-    --panel-light: #FFFFFF;
-    --panel-elevated-light: #FFFFFF;
-    --border-light: #E5E5E5;
-    --border-hover-light: #D4D4D4;
-    --muted-light: #6B6B6B;
-    --muted-bg-light: #F0F0F0;
-    --accent-light: #005b6f;
-    --accent-hover-light: #007b8f;
-    --accent-light-bg: rgba(0, 91, 111, 0.1);
-    --overlay-light: rgba(0, 0, 0, 0.4);
+    --text-secondary-light: #474747;
+  
+    /* panels are no longer pure white */
+    --panel-light: #F7F7F8;
+    --panel-elevated-light: #F3F3F5;
+  
+    --border-light: #CFCFD2;
+    --border-hover-light: #BEBEC2;
+  
+    --muted-light: #6A6A6A;
+    --muted-bg-light: #DCDDE0;
+  
+    /* teal softened in light mode */
+    --accent-light: #104378;               /* richer and less neon */
+    --accent-hover-light: #104378;
+    --accent-light-bg: rgba(0, 150, 153, 0.14);
+  
+    --overlay-light: rgba(0, 0, 0, 0.25);
+  
     --success-light: #10B981;
     --error-light: #EF4444;
     --warning-light: #F59E0B;
-
-    /* 🌑 DARK THEME TOKENS */
-    --bg-dark: #0A0A0A;
-    --bg-secondary-dark: #111111;
-    --text-dark: #F5F5F5;
-    --text-secondary-dark: #D4D4D4;
-    --panel-dark: #1A1A1A;
-    --panel-elevated-dark: #252525;
-    --border-dark: #2D2D2D;
-    --border-hover-dark: #404040;
-    --muted-dark: #A0A0A0;
-    --muted-bg-dark: #1F1F1F;
-    --accent-dark: #01FFF1;
-    --accent-hover-dark: #7FFFF8;
-    --accent-dark-bg: rgba(1, 255, 241, 0.15);
-    --overlay-dark: rgba(0, 0, 0, 0.75);
-    --success-dark: #10B981;
-    --error-dark: #EF4444;
-    --warning-dark: #F59E0B;
+  
+    /* DARK THEME (unchanged for now, since you're happy with it) */
+    --bg-dark: #1C1C1E;
+    --bg-secondary-dark: #2A2A2D;
+    --text-dark: #F0F0F0;
+    --text-secondary-dark: #CACACA;
+  
+    --panel-dark: #262629;
+    --panel-elevated-dark: #2F2F33;
+    --border-dark: #3A3A3F;
+    --border-hover-dark: #4A4A50;
+  
+    --muted-dark: #9D9D9D;
+    --muted-bg-dark: #333336;
+  
+    --accent-dark: #3DF7F9;
+    --accent-hover-dark: #7FFFFF;
+    --accent-dark-bg: rgba(61, 247, 249, 0.18);
+  
+    --overlay-dark: rgba(0, 0, 0, 0.55);
+  
+    --success-dark: #22C55E;
+    --error-dark: #F87171;
+    --warning-dark: #FBBF24;
   }
-
+  
   /* ---------------------------------------------------------------
      ACTIVE LIGHT THEME VALUES
      --------------------------------------------------------------- */
