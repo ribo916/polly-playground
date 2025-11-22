@@ -1,5 +1,6 @@
 "use client";
 import { useEffect, useState } from "react";
+import { Sun, Moon } from "lucide-react";
 
 export default function ThemeToggle() {
   const [theme, setTheme] = useState("dark");
@@ -21,22 +22,27 @@ export default function ThemeToggle() {
   return (
     <button
       onClick={toggleTheme}
-      className="px-3 py-1 text-sm border rounded transition-colors"
+      className="relative p-2 rounded-lg transition-all duration-200 hover:scale-105"
       style={{
-        borderColor: "var(--border)",
-        backgroundColor: "var(--panel)",
+        backgroundColor: "var(--muted-bg)",
         color: "var(--foreground)",
+        border: "1px solid var(--border)",
       }}
       onMouseEnter={(e) => {
-        e.currentTarget.style.backgroundColor = "var(--panel)";
-        e.currentTarget.style.opacity = "0.8";
+        e.currentTarget.style.backgroundColor = "var(--accent-bg)";
+        e.currentTarget.style.borderColor = "var(--accent)";
       }}
       onMouseLeave={(e) => {
-        e.currentTarget.style.backgroundColor = "var(--panel)";
-        e.currentTarget.style.opacity = "1";
+        e.currentTarget.style.backgroundColor = "var(--muted-bg)";
+        e.currentTarget.style.borderColor = "var(--border)";
       }}
+      aria-label="Toggle theme"
     >
-      {theme === "dark" ? "🌞" : "🌙"}
+      {theme === "dark" ? (
+        <Sun size={18} style={{ color: "var(--accent)" }} />
+      ) : (
+        <Moon size={18} style={{ color: "var(--accent)" }} />
+      )}
     </button>
   );
 }

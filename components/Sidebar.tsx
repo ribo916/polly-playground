@@ -1,26 +1,33 @@
 "use client";
-import Link from "next/link";
 import { usePathname } from "next/navigation";
+import { 
+  LayoutDashboard, 
+  FileText, 
+  Calculator, 
+  Code, 
+  Activity
+} from "lucide-react";
+import { SidebarLink } from "./SidebarLink";
 
 const sections = [
   {
-    title: "PRICING ENGINE",
+    title: "Pricing Engine",
     items: [
-      { label: "Loan Pipeline", href: "/loan-pipeline" },
-      { label: "Loan Scenarios", href: "/loan-scenarios" },
+      { label: "Loan Pipeline", href: "/loan-pipeline", icon: LayoutDashboard },
+      { label: "Loan Scenarios", href: "/loan-scenarios", icon: Calculator },
     ],
   },
   {
-    title: "UTILITIES",
+    title: "Utilities",
     items: [
-      { label: "JSON Convert", href: "/utilities/json-convert" },
+      { label: "JSON Convert", href: "/utilities/json-convert", icon: Code },
     ],
   },
   {
-    title: "MISC",
+    title: "Misc",
     items: [
-      { label: "API Samples", href: "/misc" },
-      { label: "API Logs", href: "/logs" },        
+      { label: "API Samples", href: "/misc", icon: FileText },
+      { label: "API Logs", href: "/logs", icon: Activity },
     ],
   },
 ];
@@ -30,43 +37,39 @@ export default function Sidebar() {
 
   return (
     <aside
-      className="w-56 p-4 border-r transition-colors duration-300"
+      className="w-64 border-r flex flex-col"
       style={{
         backgroundColor: "var(--panel)",
         borderColor: "var(--border)",
-        color: "var(--foreground)",
+        boxShadow: "var(--shadow-sm)",
       }}
     >
-      {sections.map((section) => (
-        <div key={section.title} className="mb-6">
-          <p
-            className="text-xs font-semibold uppercase tracking-wide mb-2"
-            style={{ color: "var(--muted)" }}
-          >
-            {section.title}
-          </p>
-          <nav className="space-y-1">
-            {section.items.map((item) => {
-              const active = pathname === item.href;
-              return (
-                <Link
-                  key={item.href}
-                  href={item.href}
-                  className="block px-3 py-2 rounded-md text-sm font-medium transition-colors duration-150"
-                  style={{
-                    backgroundColor: active
-                      ? "rgba(1, 255, 241, 0.12)"
-                      : "transparent",
-                    color: active ? "var(--accent)" : "var(--foreground)",
-                  }}
-                >
-                  {item.label}
-                </Link>
-              );
-            })}
-          </nav>
-        </div>
-      ))}
+      <nav className="flex-1 p-4 space-y-6 overflow-y-auto">
+        {sections.map((section) => (
+          <div key={section.title}>
+            <p
+              className="text-xs font-bold uppercase tracking-wider mb-3 px-2"
+              style={{ color: "var(--muted)" }}
+            >
+              {section.title}
+            </p>
+            <div className="space-y-1">
+              {section.items.map((item) => {
+                const active = pathname === item.href;
+                return (
+                  <SidebarLink
+                    key={item.href}
+                    href={item.href}
+                    label={item.label}
+                    icon={item.icon}
+                    active={active}
+                  />
+                );
+              })}
+            </div>
+          </div>
+        ))}
+      </nav>
     </aside>
   );
 }

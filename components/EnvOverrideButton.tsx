@@ -12,14 +12,27 @@ export default function EnvOverrideButton() {
       <button
         type="button"
         onClick={() => setOpen(true)}
-        className="p-2 rounded border text-sm flex items-center justify-center transition"
+        className="relative p-2 rounded-lg transition-all duration-200 hover:scale-105 group"
         style={{
-          borderColor: "var(--border)",
-          backgroundColor: "var(--panel)",
+          backgroundColor: "var(--muted-bg)",
+          border: "1px solid var(--border)",
           color: "var(--foreground)",
         }}
+        onMouseEnter={(e) => {
+          e.currentTarget.style.backgroundColor = "var(--accent-bg)";
+          e.currentTarget.style.borderColor = "var(--accent)";
+        }}
+        onMouseLeave={(e) => {
+          e.currentTarget.style.backgroundColor = "var(--muted-bg)";
+          e.currentTarget.style.borderColor = "var(--border)";
+        }}
+        aria-label="Environment overrides"
       >
-        <Database size={16} />
+        <Database 
+          size={18} 
+          style={{ color: "var(--accent)" }}
+          className="transition-transform group-hover:rotate-12"
+        />
       </button>
 
       {open && <EnvOverrideModal onClose={() => setOpen(false)} />}

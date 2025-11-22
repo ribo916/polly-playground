@@ -14,38 +14,64 @@ export const metadata = {
 export default function RootLayout({ children }: { children: ReactNode }) {
   return (
     <html lang="en" className="dark">
-      <body className="min-h-screen transition-colors duration-300 flex flex-col">
+      <body className="min-h-screen flex flex-col" style={{ backgroundColor: "var(--background)" }}>
         <LogProvider>
-          {/* Header */}
+          {/* Modern Header */}
           <header
-            className="flex items-center justify-between px-6 py-3 border-b"
+            className="sticky top-0 z-50 border-b backdrop-blur-sm"
             style={{
               borderColor: "var(--border)",
-              backgroundColor: "var(--background)",
+              backgroundColor: "var(--panel)",
+              boxShadow: "var(--shadow-sm)",
             }}
           >
-            <Link
-              href="/"
-              className="flex items-center space-x-2 no-underline hover:no-underline"
-            >
-              <h1
-                className="text-xl font-medium tracking-wide transition-colors duration-300"
-                style={{ color: "var(--title-color)" }}
+            <div className="flex items-center justify-between px-6 py-4">
+              <Link
+                href="/"
+                className="flex items-center space-x-3 no-underline hover:no-underline group"
               >
-                Polly Playground
-              </h1>
-            </Link>
+                <div
+                  className="w-8 h-8 rounded-lg flex items-center justify-center font-bold text-sm transition-transform group-hover:scale-105"
+                  style={{
+                    background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
+                    color: "var(--button-text)",
+                    boxShadow: "var(--shadow-md)",
+                  }}
+                >
+                  P
+                </div>
+                <div>
+                  <h1
+                    className="text-xl font-bold tracking-tight transition-colors duration-300"
+                    style={{ color: "var(--title-color)" }}
+                  >
+                    Polly Playground
+                  </h1>
+                  <p
+                    className="text-xs font-medium"
+                    style={{ color: "var(--muted)" }}
+                  >
+                    API Testing & Development
+                  </p>
+                </div>
+              </Link>
 
-            <div className="flex items-center gap-2">
-              <EnvOverrideButton />
-              <ThemeToggle />
+              <div className="flex items-center gap-3">
+                <EnvOverrideButton />
+                <ThemeToggle />
+              </div>
             </div>
           </header>
 
           {/* Main layout */}
-          <div className="flex flex-1">
+          <div className="flex flex-1 overflow-hidden">
             <Sidebar />
-            <main className="flex-1 p-6 overflow-y-auto">{children}</main>
+            <main 
+              className="flex-1 overflow-y-auto"
+              style={{ backgroundColor: "var(--background)" }}
+            >
+              {children}
+            </main>
           </div>
         </LogProvider>
       </body>

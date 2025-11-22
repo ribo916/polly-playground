@@ -9,9 +9,6 @@ export default function LogsPage() {
   const [loading, setLoading] = useState(false);
   const hasFetchedRef = useRef(false);
 
-  // -------------------------------
-  // Load logs
-  // -------------------------------
   const fetchServerLogs = async () => {
     setLoading(true);
     try {
@@ -25,15 +22,10 @@ export default function LogsPage() {
     }
   };
 
-  // -------------------------------
-  // Load initial data (logs + truncate flag)
-  // -------------------------------
   useEffect(() => {
-    // Prevent duplicate calls in React Strict Mode
     if (hasFetchedRef.current) return;
     hasFetchedRef.current = true;
 
-    // Fetch both in parallel
     Promise.all([
       fetchServerLogs(),
       fetch("/api/settings/truncate")
@@ -43,13 +35,10 @@ export default function LogsPage() {
             setTruncateEnabled(data.enabled);
           }
         })
-        .catch((err) => {
-          console.error("Failed to load truncate setting", err);
-        }),
+        .catch((err) => console.error("Failed truncate load:", err)),
     ]);
   }, []);
 
-  // -------------------------------
   const handleClearLogs = async () => {
     try {
       await fetch("/api/logs", { method: "DELETE" });
@@ -107,48 +96,38 @@ export default function LogsPage() {
   return (
     <div
       id="logsContainer"
-      className="p-6 space-y-2 overflow-y-auto max-h-[80vh]"
-      style={{ backgroundColor: "var(--background)" }}
+      className="p-8 space-y-4 overflow-y-auto scroll-mt-24"
+      style={{ backgroundColor: "var(--background)", height: "100%" }}
     >
       {/* HEADER */}
-      <div className="flex flex-wrap items-center justify-between mb-4 gap-3">
-        <div className="flex items-center gap-3">
-          <h2
-            className="text-lg font-semibold"
-            style={{ color: "var(--foreground)" }}
-          >
-          </h2>
+      <div className="flex flex-wrap items-center justify-between mb-6 gap-4">
+        <div>
+          <h1 className="text-3xl font-bold mb-2" style={{ color: "var(--foreground)" }}>
+            API Logs
+          </h1>
+          <p className="text-sm" style={{ color: "var(--muted)" }}>
+            Monitor all API requests and responses
+          </p>
+        </div>
 
-          {/* FILTER */}
+        <div className="flex items-center gap-3">
           <select
             value={filter}
             onChange={(e) => setFilter(e.target.value as any)}
-            className="text-sm rounded border px-2 py-1"
-            style={{
-              backgroundColor: "var(--panel)",
-              color: "var(--foreground)",
-              borderColor: "var(--border)",
-            }}
+            className="text-sm"
           >
             <option value="all">All</option>
             <option value="success">Success</option>
             <option value="error">Error</option>
           </select>
 
-          {/* TRUNCATE TOGGLE */}
+          {/* Truncate toggle */}
           <button
             type="button"
+            disabled={truncateEnabled === null}
             onClick={async () => {
-              // Don't allow toggling until state is loaded
-              if (truncateEnabled === null) {
-                console.warn("[Truncate button] Clicked but state is null, ignoring");
-                return;
-              }
-              
-              // Handle null state properly - default to false if null
-              const currentValue = truncateEnabled ?? false;
-              const newValue = !currentValue;
-              console.log(`[Truncate button] Toggling from ${currentValue} to ${newValue}`);
+              if (truncateEnabled === null) return;
+              const newValue = !truncateEnabled;
               setTruncateEnabled(newValue);
 
               await fetch("/api/settings/truncate", {
@@ -157,150 +136,165 @@ export default function LogsPage() {
                 body: JSON.stringify({ enabled: newValue }),
               });
             }}
-            disabled={truncateEnabled === null}
-            className="text-sm px-3 py-1 rounded transition-colors"
+            className="text-sm px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 disabled:opacity-50"
             style={{
-              backgroundColor: "var(--panel)",
-              color: "var(--foreground)",
-              border: "1px solid var(--border)",
-            }}
-            onMouseEnter={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--accent)";
-              e.currentTarget.style.color = "#000";
-            }}
-            onMouseLeave={(e) => {
-              e.currentTarget.style.backgroundColor = "var(--panel)";
-              e.currentTarget.style.color = "var(--foreground)";
+              backgroundColor: truncateEnabled ? "var(--accent-bg)" : "var(--panel)",
+              color: truncateEnabled ? "var(--accent)" : "var(--foreground)",
+              border: "1.5px solid",
+              borderColor: truncateEnabled ? "var(--accent)" : "var(--border)",
             }}
           >
             {truncateEnabled ? "Truncate: ON" : "Truncate: OFF"}
           </button>
 
-          {/* REFRESH */}
           <button
             onClick={fetchServerLogs}
             disabled={loading}
-            className="text-sm px-3 py-1 rounded border transition-colors"
+            className="text-sm px-4 py-2 rounded-lg font-medium transition-all hover:scale-105 disabled:opacity-50"
             style={{
               backgroundColor: "var(--panel)",
               color: "var(--foreground)",
-              borderColor: "var(--border)",
-              opacity: loading ? 0.6 : 1,
-              cursor: loading ? "not-allowed" : "pointer",
+              border: "1.5px solid var(--border)",
             }}
           >
-            {loading ? "Refreshing..." : "Refresh"}
+            {loading ? "Refreshing…" : "Refresh"}
           </button>
-        </div>
 
-        {/* CLEAR LOGS */}
-        {logs.length > 0 && (
-          <button
-            onClick={handleClearLogs}
-            className="text-sm px-3 py-1 rounded transition-colors"
-            style={{
-              backgroundColor: "var(--panel)",
-              color: "var(--foreground)",
-              border: "1px solid var(--border)",
-            }}
-          >
-            Clear Logs
-          </button>
-        )}
+          {logs.length > 0 && (
+            <button
+              onClick={handleClearLogs}
+              className="text-sm px-4 py-2 rounded-lg font-medium transition-all hover:scale-105"
+              style={{
+                backgroundColor: "var(--error)",
+                color: "white",
+                border: "1.5px solid var(--error)",
+              }}
+            >
+              Clear Logs
+            </button>
+          )}
+        </div>
       </div>
 
       {filteredLogs.length === 0 && (
-        <p style={{ color: "var(--muted)" }}>No logs found.</p>
+        <div
+          className="p-8 rounded-xl border text-center"
+          style={{
+            backgroundColor: "var(--panel)",
+            borderColor: "var(--border)",
+          }}
+        >
+          <p style={{ color: "var(--muted)" }}>No logs found.</p>
+        </div>
       )}
 
       {/* LOG LIST */}
-      {filteredLogs.map((log) => (
-        <div
-          key={log.id}
-          className="border rounded-md px-4 py-2 cursor-pointer transition-colors duration-200 hover:bg-[var(--panel)] shadow-sm"
-          style={{
-            borderColor: "var(--border)",
-            backgroundColor:
-              expanded === log.id ? "var(--panel)" : "transparent",
-          }}
-          onClick={() => setExpanded(expanded === log.id ? null : log.id)}
-        >
-          {/* SUMMARY */}
-          <div className="flex justify-between items-center text-sm">
-            <div className="flex items-center gap-2 font-mono">
-              <span
-                className="inline-block w-2.5 h-2.5 rounded-full"
-                style={{
-                  backgroundColor: getStatusColor(log.status),
-                }}
-              ></span>
-              <span className="font-semibold" style={{ color: "var(--accent)" }}>
-                [{log.method}]
-              </span>
-              <span>{log.endpoint}</span>
-              <span
-                style={{
-                  color: log.status >= 400 ? "#f87171" : "var(--muted)",
-                }}
-              >
-                {log.status}
-              </span>
-              · {log.duration} ms
-            </div>
-            <span
-              className="text-xs"
+      <div className="space-y-3">
+        {filteredLogs.map((log) => {
+          const responseBody =
+            log.response ??
+            log.data ??
+            log.body ??
+            log.payload ??
+            log.res ??
+            null;
+
+          return (
+            <div
+              key={log.id}
+              className="border rounded-xl px-5 py-4 cursor-pointer transition-all hover:scale-[1.01] scroll-mt-24"
               style={{
-                color: "var(--muted)",
+                borderColor: expanded === log.id ? "var(--accent)" : "var(--border)",
+                backgroundColor:
+                  expanded === log.id ? "var(--panel-elevated)" : "var(--panel)",
               }}
+              onClick={() => setExpanded(expanded === log.id ? null : log.id)}
             >
-              {new Date(log.timestamp).toLocaleTimeString()}
-            </span>
-          </div>
-
-          {/* EXPANDED DETAILS */}
-          {expanded === log.id && (
-            <div className="mt-3 text-xs space-y-3">
-              <div>
-                <div
-                  className="font-semibold mb-1"
-                  style={{ color: "var(--muted)" }}
-                >
-                  Request
+              {/* SUMMARY */}
+              <div className="flex justify-between items-center text-sm">
+                <div className="flex items-center gap-2 font-mono">
+                  <span
+                    className="inline-block w-2.5 h-2.5 rounded-full"
+                    style={{
+                      backgroundColor: getStatusColor(log.status),
+                    }}
+                  />
+                  <span className="font-semibold" style={{ color: "var(--accent)" }}>
+                    [{log.method}]
+                  </span>
+                  <span>{log.endpoint}</span>
+                  <span
+                    style={{
+                      color: log.status >= 400 ? "#f87171" : "var(--muted)",
+                    }}
+                  >
+                    {log.status}
+                  </span>
+                  · {log.duration} ms
                 </div>
-                <pre
-                  className="p-3 rounded-md overflow-x-auto"
-                  style={{
-                    backgroundColor: "rgba(0,0,0,0.05)",
-                    border: "1px solid var(--border)",
-                  }}
-                  dangerouslySetInnerHTML={{
-                    __html: syntaxHighlight(log.request),
-                  }}
-                />
+
+                <span className="text-xs" style={{ color: "var(--muted)" }}>
+                  {new Date(log.timestamp).toLocaleTimeString()}
+                </span>
               </div>
 
-              <div>
+              {/* EXPANDED */}
+              {expanded === log.id && (
                 <div
-                  className="font-semibold mb-1"
-                  style={{ color: "var(--muted)" }}
+                  className="mt-4 pt-4 border-t space-y-4 scroll-mt-24"
+                  style={{ borderColor: "var(--border)" }}
                 >
-                  Response
+                  {/* REQUEST */}
+                  <div>
+                    <div
+                      className="text-xs font-semibold mb-2 uppercase tracking-wide"
+                      style={{ color: "var(--muted)" }}
+                    >
+                      Request
+                    </div>
+                    <pre
+                      className="p-4 rounded-lg overflow-x-auto overflow-y-auto text-xs scroll-mt-24"
+                      style={{
+                        backgroundColor: "var(--background)",
+                        border: "1px solid var(--border)",
+                        maxHeight: "400px",
+                        paddingTop: "20px",
+                        scrollMarginTop: "80px",
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: syntaxHighlight(log.request),
+                      }}
+                    />
+                  </div>
+
+                  {/* RESPONSE */}
+                  <div>
+                    <div
+                      className="text-xs font-semibold mb-2 uppercase tracking-wide"
+                      style={{ color: "var(--muted)" }}
+                    >
+                      Response
+                    </div>
+                    <pre
+                      className="p-4 rounded-lg overflow-x-auto overflow-y-auto text-xs scroll-mt-24"
+                      style={{
+                        backgroundColor: "var(--background)",
+                        border: "1px solid var(--border)",
+                        maxHeight: "400px",
+                        paddingTop: "20px",
+                        scrollMarginTop: "80px",
+                      }}
+                      dangerouslySetInnerHTML={{
+                        __html: syntaxHighlight(log.response),
+                      }}
+                    />
+                  </div>
                 </div>
-                <pre
-                  className="p-3 rounded-md overflow-x-auto"
-                  style={{
-                    backgroundColor: "rgba(0,0,0,0.05)",
-                    border: "1px solid var(--border)",
-                  }}
-                  dangerouslySetInnerHTML={{
-                    __html: syntaxHighlight(log.response),
-                  }}
-                />
-              </div>
+              )}
             </div>
-          )}
-        </div>
-      ))}
+          );
+        })}
+      </div>
     </div>
   );
 }
