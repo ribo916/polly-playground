@@ -156,7 +156,6 @@ const LOAN_BUYDOWN_TO_PRICING_BUYDOWN: Record<string, string> = {
 };
 
 // Purpose (ApiLoan.purpose → QuoteScenarioRequest.purpose)
-// This is not always a formal enum; it's a semantic mapping.
 const LOAN_PURPOSE_TO_PRICING_PURPOSE: Record<string, string> = {
   PURCHASE: 'Purchase',
   NO_CASH_OUT_REFINANCE: 'NoCashOutRefinance',
@@ -192,96 +191,100 @@ export function uiToExternalPricingScenario(uiRequest: any) {
   /* --------------------------------------------------------------------------- */
   const ENUMS = {
     LoanPurpose: {
-      "1": "Purchase",
-      "2": "Refinance",
-      "3": "Construction",
-      "4": "ConstructionPerm",
-      "5": "Other",
-      "6": "NoCashOutRefinance",
-      "7": "CashOutRefinance"
+      '1': 'Purchase',
+      '2': 'Refinance',
+      '3': 'Construction',
+      '4': 'ConstructionPerm',
+      '5': 'Other',
+      '6': 'NoCashOutRefinance',
+      '7': 'CashOutRefinance'
     },
     RefinancePurpose: {
-      "0": "None",
-      "1": "NoCashOut",
-      "2": "CashOut",
-      "3": "LimitedCashOut",
-      "4": "HomeImprovement",
-      "5": "DebtConsolidation",
-      "6": "Other"
+      '0': 'None',
+      '1': 'NoCashOut',
+      '2': 'CashOut',
+      '3': 'LimitedCashOut',
+      '4': 'HomeImprovement',
+      '5': 'DebtConsolidation',
+      '6': 'Other'
     },
     Occupancy: {
-      "0": "None",
-      "1": "PrimaryResidence",
-      "2": "SecondHome",
-      "3": "InvestmentProperty"
+      '0': 'None',
+      '1': 'PrimaryResidence',
+      '2': 'SecondHome',
+      '3': 'InvestmentProperty'
     },
     PropertyType: {
-      "1": "SFR",
-      "2": "Condominium",
-      "3": "PUD",
-      "5": "Mobile",
-      "6": "TwoForUnit",
-      "7": "Cooperative",
-      "8": "Townhome",
-      "9": "Multifamily",
-      "10": "Commercial",
-      "11": "MixedUse",
-      "12": "Farm",
-      "13": "HomeAndBusiness",
-      "14": "Land",
-      "15": "ManufacturedSingleWide",
-      "16": "ManufacturedDoubleWide"
+      '1': 'SFR',
+      '2': 'Condominium',
+      '3': 'PUD',
+      '5': 'Mobile',
+      '6': 'TwoForUnit',
+      '7': 'Cooperative',
+      '8': 'Townhome',
+      '9': 'Multifamily',
+      '10': 'Commercial',
+      '11': 'MixedUse',
+      '12': 'Farm',
+      '13': 'HomeAndBusiness',
+      '14': 'Land',
+      '15': 'ManufacturedSingleWide',
+      '16': 'ManufacturedDoubleWide'
     },
     Impounds: {
-      "0": "None",
-      "1": "Partial",
-      "2": "Full"
+      '0': 'None',
+      '1': 'Partial',
+      '2': 'Full'
     },
     AUS: {
-      "0": "None",
-      "1": "Manual",
-      "2": "DU",
-      "3": "LP",
-      "4": "Other",
-      "5": "NotSpecified"
+      '0': 'None',
+      '1': 'Manual',
+      '2': 'DU',
+      '3': 'LP',
+      '4': 'Other',
+      '5': 'NotSpecified'
     },
     TemporaryBuydown: {
-      "0": "None",
-      "1": "ThreeTwoOne",
-      "2": "TwoOne",
-      "3": "OneOne",
-      "4": "OneZero"
+      '0': 'None',
+      '1': 'ThreeTwoOne',
+      '2': 'TwoOne',
+      '3': 'OneOne',
+      '4': 'OneZero'
     },
     VerificationMethod: {
-      "1": "FullDocument",
-      "2": "BankStatement",
-      "3": "VOE",
-      "4": "AssetQualification",
-      "5": "DSCR",
-      "6": "Method1099",
-      "7": "CPAPAndL"
+      '1': 'FullDocument',
+      '2': 'BankStatement',
+      '3': 'VOE',
+      '4': 'AssetQualification',
+      '5': 'DSCR',
+      '6': 'Method1099',
+      '7': 'CPAPAndL'
     },
     CreditGrade: {
-      "1": "A",
-      "2": "B",
-      "3": "C",
-      "4": "D",
-      "5": "APlus",
-      "6": "BMinus",
-      "7": "AAA",
-      "8": "AA",
-      "9": "AMinus",
-      "10": "BB",
-      "11": "BPlus",
-      "12": "CMinus",
-      "13": "BBB",
-      "14": "CCC",
-      "15": "CC",
-      "16": "CPlus",
-      "17": "DDD",
-      "18": "DD",
-      "19": "DPlus",
-      "20": "DMinus"
+      '1': 'A',
+      '2': 'B',
+      '3': 'C',
+      '4': 'D',
+      '5': 'APlus',
+      '6': 'BMinus',
+      '7': 'AAA',
+      '8': 'AA',
+      '9': 'AMinus',
+      '10': 'BB',
+      '11': 'BPlus',
+      '12': 'CMinus',
+      '13': 'BBB',
+      '14': 'CCC',
+      '15': 'CC',
+      '16': 'CPlus',
+      '17': 'DDD',
+      '18': 'DD',
+      '19': 'DPlus',
+      '20': 'DMinus'
+    },
+    BrokerCompPaidBy: {
+      '0': 'Lender',
+      '2': 'Borrower'
     }
   };
 
@@ -294,15 +297,23 @@ export function uiToExternalPricingScenario(uiRequest: any) {
     fallback: string
   ) => {
     if (!table) {
-      console.warn("[uiToExternalPricingScenario] Missing enum table → fallback:", fallback);
+      console.warn(
+        '[uiToExternalPricingScenario] Missing enum table → fallback:',
+        fallback
+      );
       return fallback;
     }
-    if (value === null || value === undefined || value === "") return fallback;
+    if (value === null || value === undefined || value === '') return fallback;
 
     const key = String(value).trim();
     if (table[key]) return table[key];
 
-    console.warn("[uiToExternalPricingScenario] Unknown enum:", value, "→ fallback:", fallback);
+    console.warn(
+      '[uiToExternalPricingScenario] Unknown enum:',
+      value,
+      '→ fallback:',
+      fallback
+    );
     return fallback;
   };
 
@@ -321,11 +332,12 @@ export function uiToExternalPricingScenario(uiRequest: any) {
   /* --------------------------------------------------------------------------- */
 
   return {
-    audienceId: data.audienceId ?? data.AudienceId ?? "Retail",
+    audienceId: data.audienceId ?? data.AudienceId ?? 'Retail',
 
     search: {
-      position: search.position ?? search.Position ?? "First",
-      desiredLockPeriod: search.desiredLockPeriod ?? search.DesiredLockPeriod ?? 30,
+      position: search.position ?? search.Position ?? 'First',
+      desiredLockPeriod:
+        search.desiredLockPeriod ?? search.DesiredLockPeriod ?? 30,
       includeInterestOnlyProducts:
         search.includeInterestOnlyProducts ??
         search.IncludeInterestOnlyProducts ??
@@ -337,8 +349,8 @@ export function uiToExternalPricingScenario(uiRequest: any) {
     },
 
     borrower: {
-      firstName: borrowerSrc.firstName ?? borrowerSrc.FirstName ?? "",
-      lastName: borrowerSrc.lastName ?? borrowerSrc.LastName ?? "",
+      firstName: borrowerSrc.firstName ?? borrowerSrc.FirstName ?? '',
+      lastName: borrowerSrc.lastName ?? borrowerSrc.LastName ?? '',
       fico: borrowerSrc.fico ?? borrowerSrc.FICO ?? null,
       dtiRatio: toDecimalStringOrNull(
         borrowerSrc.dtiRatio ?? borrowerSrc.DTIRatio
@@ -346,24 +358,30 @@ export function uiToExternalPricingScenario(uiRequest: any) {
       monthsOfReserves:
         borrowerSrc.monthsOfReserves ?? borrowerSrc.MonthsOfReserves ?? 0,
       isNonOccupancyBorrower:
-        borrowerSrc.isNonOccupancyBorrower ?? borrowerSrc.IsNonOccupancyBorrower ?? false,
+        borrowerSrc.isNonOccupancyBorrower ??
+        borrowerSrc.IsNonOccupancyBorrower ??
+        false,
       isNonOccupancyCoborrower:
-        borrowerSrc.isNonOccupancyCoborrower ?? borrowerSrc.IsNonOccupancyCoborrower ?? false,
+        borrowerSrc.isNonOccupancyCoborrower ??
+        borrowerSrc.IsNonOccupancyCoborrower ??
+        false,
       propertiesOwned:
         borrowerSrc.propertiesOwned ?? borrowerSrc.PropertiesOwned ?? 0,
       isSelfEmployed:
         borrowerSrc.isSelfEmployed ?? borrowerSrc.IsSelfEmployed ?? false,
       multipleBorrowerPairs:
-        borrowerSrc.multipleBorrowerPairs ?? borrowerSrc.MultipleBorrowerPairs ?? false,
+        borrowerSrc.multipleBorrowerPairs ??
+        borrowerSrc.MultipleBorrowerPairs ??
+        false,
       verificationMethod: mapEnum(
         borrowerSrc.verificationMethod ?? borrowerSrc.VerificationMethod,
         ENUMS.VerificationMethod,
-        "None"
+        'None'
       ),
       creditGrade: mapEnum(
         borrowerSrc.creditGrade ?? borrowerSrc.CreditGrade,
         ENUMS.CreditGrade,
-        "None"
+        'None'
       ),
       isNonTraditionalCredit:
         borrowerSrc.isNonTraditionalCredit ??
@@ -389,7 +407,7 @@ export function uiToExternalPricingScenario(uiRequest: any) {
       purpose: mapEnum(
         loanSrc.purpose ?? loanSrc.Purpose,
         ENUMS.LoanPurpose,
-        "Purchase"
+        'Purchase'
       ),
 
       amount: toDecimalStringOrUndefined(loanSrc.amount ?? loanSrc.Amount),
@@ -404,7 +422,7 @@ export function uiToExternalPricingScenario(uiRequest: any) {
       refinancePurpose: mapEnum(
         loanSrc.refinancePurpose ?? loanSrc.RefinancePurpose,
         ENUMS.RefinancePurpose,
-        "None"
+        'None'
       ),
 
       cashOutAmount: toDecimalStringOrUndefined(
@@ -424,16 +442,12 @@ export function uiToExternalPricingScenario(uiRequest: any) {
         (loanSrc.isMortgageInsurancePaidByBorrower ??
           loanSrc.IsMortgageInsurancePaidByBorrower) !== false,
 
-      aus: mapEnum(
-        loanSrc.aus ?? loanSrc.Aus,
-        ENUMS.AUS,
-        "NotSpecified"
-      ),
+      aus: mapEnum(loanSrc.aus ?? loanSrc.Aus, ENUMS.AUS, 'NotSpecified'),
 
-      position: loanSrc.position ?? loanSrc.Position ?? "First",
+      position: loanSrc.position ?? loanSrc.Position ?? 'First',
 
       fhaFinancingOption:
-        loanSrc.fhaFinancingOption ?? loanSrc.FhaFinancingOption ?? "Finance",
+        loanSrc.fhaFinancingOption ?? loanSrc.FhaFinancingOption ?? 'Finance',
       fhaMortgageInsurancePremium: toDecimalStringOrUndefined(
         loanSrc.fhaMortgageInsurancePremium ??
           loanSrc.FhaMortgageInsurancePremium
@@ -450,7 +464,9 @@ export function uiToExternalPricingScenario(uiRequest: any) {
       ),
 
       usdaFinancingOption:
-        loanSrc.usdaFinancingOption ?? loanSrc.UsdaFinancingOption ?? "Finance",
+        loanSrc.usdaFinancingOption ??
+        loanSrc.UsdaFinancingOption ??
+        'Finance',
       usdaGuaranteeFee: toDecimalStringOrUndefined(
         loanSrc.usdaGuaranteeFee ?? loanSrc.UsdaGuaranteeFee
       ),
@@ -465,11 +481,11 @@ export function uiToExternalPricingScenario(uiRequest: any) {
       ),
 
       vaFinancingOption:
-        loanSrc.vaFinancingOption ?? loanSrc.VaFinancingOption ?? "Finance",
+        loanSrc.vaFinancingOption ?? loanSrc.VaFinancingOption ?? 'Finance',
       vaDownPaymentAmount: toDecimalStringOrUndefined(
         loanSrc.vaDownPaymentAmount ?? loanSrc.VaDownPaymentAmount
       ),
-      vaLoanHistory: loanSrc.vaLoanHistory ?? loanSrc.VaLoanHistory ?? "First",
+      vaLoanHistory: loanSrc.vaLoanHistory ?? loanSrc.VaLoanHistory ?? 'First',
       vaFundingFee: toDecimalStringOrUndefined(
         loanSrc.vaFundingFee ?? loanSrc.VaFundingFee
       ),
@@ -498,42 +514,47 @@ export function uiToExternalPricingScenario(uiRequest: any) {
         loanSrc.vaDownPayment ?? loanSrc.VaDownPayment
       ),
 
-      applicationDate: loanSrc.applicationDate ?? loanSrc.ApplicationDate ?? null,
+      applicationDate:
+        loanSrc.applicationDate ?? loanSrc.ApplicationDate ?? null,
 
       streamlineRefinanceType: mapEnum(
         loanSrc.streamlineRefinanceType ?? loanSrc.StreamlineRefinanceType,
         {
-          "0": "None",
-          "1": "NoCashoutStreamlinedRefinance",
-          "2": "NoCashOutFHAStreamlinedRefinance"
+          '0': 'None',
+          '1': 'NoCashoutStreamlinedRefinance',
+          '2': 'NoCashOutFHAStreamlinedRefinance'
         },
-        "None"
+        'None'
       ),
 
       temporaryBuydownType: mapEnum(
         loanSrc.temporaryBuydownType ?? loanSrc.TemporaryBuydownType,
         ENUMS.TemporaryBuydown,
-        "None"
+        'None'
       ),
 
       ltv: toDecimalStringOrUndefined(loanSrc.ltv ?? loanSrc.LTV),
       cltv: toDecimalStringOrUndefined(loanSrc.cltv ?? loanSrc.CLTV),
       hcltv: toDecimalStringOrUndefined(loanSrc.hcltv ?? loanSrc.HCLTV),
-      impounds: mapEnum(loanSrc.impounds ?? loanSrc.Impounds, ENUMS.Impounds, "Full")
+      impounds: mapEnum(
+        loanSrc.impounds ?? loanSrc.Impounds,
+        ENUMS.Impounds,
+        'Full'
+      )
     },
 
     property: {
-      state: propertySrc.state ?? propertySrc.State ?? "",
-      county: propertySrc.county ?? propertySrc.County ?? "",
+      state: propertySrc.state ?? propertySrc.State ?? '',
+      county: propertySrc.county ?? propertySrc.County ?? '',
       propertyType: mapEnum(
         propertySrc.propertyType ?? propertySrc.PropertyType,
         ENUMS.PropertyType,
-        "SFR"
+        'SFR'
       ),
       occupancy: mapEnum(
         propertySrc.occupancy ?? propertySrc.Occupancy,
         ENUMS.Occupancy,
-        "PrimaryResidence"
+        'PrimaryResidence'
       ),
       units: propertySrc.units ?? propertySrc.Units ?? 1,
       stories: propertySrc.stories ?? propertySrc.Stories ?? 1,
@@ -544,22 +565,26 @@ export function uiToExternalPricingScenario(uiRequest: any) {
       isCondotel:
         propertySrc.isCondotel ?? propertySrc.IsCondotel ?? null,
       inspectionWaiver:
-        propertySrc.inspectionWaiver ?? propertySrc.InspectionWaiver ?? false,
-      addressLine1: propertySrc.addressLine1 ?? propertySrc.AddressLine1 ?? "",
-      addressLine2: propertySrc.addressLine2 ?? propertySrc.AddressLine2 ?? "",
-      city: propertySrc.city ?? propertySrc.City ?? "",
+        propertySrc.inspectionWaiver ??
+        propertySrc.InspectionWaiver ??
+        false,
+      addressLine1:
+        propertySrc.addressLine1 ?? propertySrc.AddressLine1 ?? '',
+      addressLine2:
+        propertySrc.addressLine2 ?? propertySrc.AddressLine2 ?? '',
+      city: propertySrc.city ?? propertySrc.City ?? '',
       countyFipsCode:
-        propertySrc.countyFipsCode ?? propertySrc.CountyFipsCode ?? "",
-      zipCode: propertySrc.zipCode ?? propertySrc.ZipCode ?? "",
+        propertySrc.countyFipsCode ?? propertySrc.CountyFipsCode ?? '',
+      zipCode: propertySrc.zipCode ?? propertySrc.ZipCode ?? '',
       propertyAttachmentType: mapEnum(
         propertySrc.propertyAttachmentType ??
           propertySrc.PropertyAttachmentType,
         {
-          "0": "Unspecified",
-          "1": "Detached",
-          "2": "Attached"
+          '0': 'Unspecified',
+          '1': 'Detached',
+          '2': 'Attached'
         },
-        "Unspecified"
+        'Unspecified'
       ),
       estimatedValue: toDecimalStringOrUndefined(
         propertySrc.estimatedValue ?? propertySrc.EstimatedValue
@@ -583,7 +608,11 @@ export function uiToExternalPricingScenario(uiRequest: any) {
       calculatedAmount: toDecimalStringOrUndefined(
         brokerCompSrc.calculatedAmount ?? brokerCompSrc.CalculatedAmount
       ),
-      paidBy: brokerCompSrc.paidBy ?? brokerCompSrc.PaidBy ?? "Lender",
+      paidBy: mapEnum(
+        brokerCompSrc.paidBy ?? brokerCompSrc.PaidBy,
+        ENUMS.BrokerCompPaidBy,
+        'Lender'
+      ),
       calculatedAdjustment: toDecimalStringOrUndefined(
         brokerCompSrc.calculatedAdjustment ??
           brokerCompSrc.CalculatedAdjustment
@@ -597,7 +626,7 @@ export function uiToExternalPricingScenario(uiRequest: any) {
       operations:
         data.settings?.operations ??
         data.Settings?.Operations ??
-        ["Eligibility", "Pricing"],
+        ['Eligibility', 'Pricing'],
       returnTerseResponse:
         data.settings?.returnTerseResponse ??
         data.Settings?.ReturnTerseResponse ??
@@ -614,7 +643,6 @@ export function uiToExternalPricingScenario(uiRequest: any) {
   };
 }
 
-
 /* ------------------------------------------------------------------ */
 /* SECTION 2: Loan Service ApiLoan → External Pricing ScenarioRequest */
 /* ------------------------------------------------------------------ */
@@ -627,8 +655,10 @@ const buildPricingBorrowerFromLoan = (loanData: any) => {
 
   // Robust mapping for verificationMethod (FULL → FullDocument, etc.)
   const verificationMethod =
-    mapEnumNormalized(b.verificationMethod, LOAN_VERIFICATION_METHOD_TO_PRICING_VERIFICATION) ??
-    undefined;
+    mapEnumNormalized(
+      b.verificationMethod,
+      LOAN_VERIFICATION_METHOD_TO_PRICING_VERIFICATION
+    ) ?? undefined;
 
   return {
     firstName: b.firstName || '',
@@ -641,7 +671,7 @@ const buildPricingBorrowerFromLoan = (loanData: any) => {
     propertiesOwned: b.propertiesOwned ?? 0,
     isSelfEmployed: b.isSelfEmployed ?? false,
     multipleBorrowerPairs: b.multipleBorrowerPairs ?? false,
-    verificationMethod, // <— now correctly "FullDocument", etc.
+    verificationMethod, // now correctly "FullDocument", etc.
     creditGrade: b.creditGrade || undefined,
     isNonTraditionalCredit: b.isNonTraditionalCredit ?? false,
     isGiftFunds: b.isGiftFunds ?? false,
@@ -687,18 +717,28 @@ const buildPricingLoanFromLoan = (loanData: any) => {
     fhaPriorEndorsementDate: loanData.fhaCaseAssignmentDate || undefined,
 
     // USDA
-    usdaTotalLoanAmount: toDecimalStringOrUndefined(loanData.usdaTotalLoanAmount),
-    usdaGuaranteeFeeAmount: toDecimalStringOrUndefined(loanData.usdaGuaranteeFeeAmount),
-    usdaGuaranteeFee: toDecimalStringOrUndefined(loanData.usdaGuaranteedPercentage),
+    usdaTotalLoanAmount: toDecimalStringOrUndefined(
+      loanData.usdaTotalLoanAmount
+    ),
+    usdaGuaranteeFeeAmount: toDecimalStringOrUndefined(
+      loanData.usdaGuaranteeFeeAmount
+    ),
+    usdaGuaranteeFee: toDecimalStringOrUndefined(
+      loanData.usdaGuaranteedPercentage
+    ),
     usdaFinanceAmount: toDecimalStringOrUndefined(loanData.usdaFinancedAmount),
     usdaFinancingOption: screamingToPascal(loanData.usdaFinancingOption),
 
     // VA
     vaTotalLoanAmount: toDecimalStringOrUndefined(loanData.vaTotalLoanAmount),
-    vaDownPaymentAmount: toDecimalStringOrUndefined(loanData.vaDownPaymentAmount),
+    vaDownPaymentAmount: toDecimalStringOrUndefined(
+      loanData.vaDownPaymentAmount
+    ),
     vaDownPayment: toDecimalStringOrUndefined(loanData.vaDownPayment),
     vaFundingFeeAmount: toDecimalStringOrUndefined(loanData.vaFundingFeeAmount),
-    vaFundingFee: toDecimalStringOrUndefined(loanData.vaFundingFeePercentage),
+    vaFundingFee: toDecimalStringOrUndefined(
+      loanData.vaFundingFeePercentage
+    ),
     vaFinanceAmount: toDecimalStringOrUndefined(loanData.vaFinancedAmount),
     vaFinancingOption: screamingToPascal(loanData.vaFinancingOption),
     vaLoanHistory: screamingToPascal(loanData.vaLoanHistory),
@@ -725,7 +765,8 @@ const buildPricingLoanFromLoan = (loanData: any) => {
 
     lenderFee: toDecimalStringOrUndefined(loanData.lenderFee),
     rollLenderFee: loanData.rollLenderFee ?? null,
-    prepaymentPenaltyPeriodMonths: loanData.prepaymentPenaltyPeriodMonths ?? null,
+    prepaymentPenaltyPeriodMonths:
+      loanData.prepaymentPenaltyPeriodMonths ?? null,
     prepaymentPenaltyStructure: screamingToPascal(
       loanData.prepaymentPenaltyStructure
     ),
@@ -863,7 +904,8 @@ export function externalToGetLoan(externalRequest: any) {
       bankStatementsNumberOfMonthsPersonal: null,
       propertiesOwned: borrower.propertiesOwned ?? 0,
       monthsOfReserves: borrower.monthsOfReserves ?? 0,
-      verificationMethod: pascalToScreaming(borrower.verificationMethod) || null,
+      verificationMethod:
+        pascalToScreaming(borrower.verificationMethod) || null,
       verificationOfEmploymentAmount: null,
       derogatoryEvents: {
         deMultEvents: null,
@@ -911,7 +953,9 @@ export function externalToGetLoan(externalRequest: any) {
       lotSizeInAcres: toDecimalStringOrNull(property.lotSizeInAcres),
       occupancy: pascalToScreaming(property.occupancy) || 'PRIMARY',
       propertyType: pascalToScreaming(property.propertyType) || 'SFR',
-      propertyAttachmentType: pascalToScreaming(property.propertyAttachmentType),
+      propertyAttachmentType: pascalToScreaming(
+        property.propertyAttachmentType
+      ),
       state: property.state || '',
       stateFipsCode: '',
       stories: property.stories ?? 1,
@@ -950,12 +994,10 @@ export function externalToGetLoan(externalRequest: any) {
     isMortgageInsurancePaidByBorrower:
       loan.isMortgageInsurancePaidByBorrower !== false,
     prepaymentPenaltyPeriodMonths: loan.prepaymentPenaltyPeriodMonths || null,
-    prepaymentPenaltyStructure: pascalToScreaming(
-      loan.prepaymentPenaltyStructure
-    ) || null,
-    prepaymentPenaltyStructureType: pascalToScreaming(
-      loan.prepaymentPenaltyStructureType
-    ) || null,
+    prepaymentPenaltyStructure:
+      pascalToScreaming(loan.prepaymentPenaltyStructure) || null,
+    prepaymentPenaltyStructureType:
+      pascalToScreaming(loan.prepaymentPenaltyStructureType) || null,
     propertyValue: toDecimalStringOrNull(loan.propertyValue) || '0.0000',
     purchasePrice: toDecimalStringOrNull(loan.purchasePrice) || '0.0000',
     refinancePurpose: 'NONE',
@@ -965,18 +1007,16 @@ export function externalToGetLoan(externalRequest: any) {
     isSecondCommunityLoan: loan.isSecondCommunityLoan ?? null,
     isSecondPiggyback: loan.isSecondPiggyback ?? null,
     servicerName: '',
-    temporaryBuydownType: pascalToScreaming(
-      loan.temporaryBuydownType
-    ) || null,
+    temporaryBuydownType:
+      pascalToScreaming(loan.temporaryBuydownType) || null,
     loanTerm: loan.loanTerm ?? null,
     loanType: pascalToScreaming(loan.loanType),
     usdaTotalLoanAmount: toDecimalStringOrNull(loan.usdaTotalLoanAmount),
     vaTotalLoanAmount: toDecimalStringOrNull(loan.vaTotalLoanAmount),
     impoundType: pascalToScreaming(loan.impounds) || 'FULL',
     rollLenderFee: loan.rollLenderFee ?? null,
-    streamlineRefinanceType: pascalToScreaming(
-      loan.streamlineRefinanceType
-    ) || null,
+    streamlineRefinanceType:
+      pascalToScreaming(loan.streamlineRefinanceType) || null,
     armFixedTerm: loan.armFixedTerm ?? null,
     created: new Date().toISOString(),
     modified: new Date().toISOString(),
