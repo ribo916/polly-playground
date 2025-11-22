@@ -1,4 +1,4 @@
-// app/loan-pipeline/data/CreateLoanFieldConfig.ts
+// app/loan-pipeline/data/createLoanFieldConfig.ts
 
 export type FieldGroup = "required" | "requiredNullable" | "optional";
 

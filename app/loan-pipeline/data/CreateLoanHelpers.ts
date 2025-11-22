@@ -1,6 +1,6 @@
-// app/loan-pipeline/data/CreateLoanHelpers.ts
+// app/loan-pipeline/data/createLoanHelpers.ts
 
-import { createLoanFieldDefinitions, FieldDefinition } from "./CreateLoanFieldConfig";
+import { createLoanFieldDefinitions, FieldDefinition } from "./createLoanFieldConfig";
 import sample from "@/app/loan-pipeline/data/CreateLoanPayload.json";
 
 /**
