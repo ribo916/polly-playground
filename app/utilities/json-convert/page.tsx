@@ -92,7 +92,7 @@ export default function JsonConvertPage() {
   const info = conversionInfo[currentConversion];
 
   return (
-    <div className="max-w-7xl mx-auto">
+    <div className="max-w-7xl mx-auto pt-14">
       <div
         className="rounded-xl p-8 mb-5"
         style={{

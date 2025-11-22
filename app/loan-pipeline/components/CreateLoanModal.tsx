@@ -47,7 +47,6 @@ export default function CreateLoanModal({
   // Derive all metadata
   const fieldDefs = deriveFieldDefinitions(sample, enums);
 
-  // Partition into sections
   const loanFields = fieldDefs.filter(
     (f) =>
       !f.key.startsWith("borrower.") &&
@@ -123,7 +122,7 @@ export default function CreateLoanModal({
           <select
             value={value}
             onChange={(e) => updateField(def.key, e.target.value)}
-            className="rounded p-2"
+            className="border rounded p-2 bg-panel text-foreground"
           >
             {!def.isRequired || def.isNullable ? (
               <option value="">Select…</option>
@@ -218,11 +217,11 @@ export default function CreateLoanModal({
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center backdrop-blur-sm"
+      className="fixed inset-x-0 top-[80px] bottom-0 flex items-start justify-center backdrop-blur-sm overflow-y-auto"
       style={{ backgroundColor: "var(--overlay)" }}
     >
       <div
-        className="p-6 rounded shadow-lg w-[800px] max-h-[90vh] overflow-y-auto border"
+        className="mt-4 p-6 rounded shadow-lg w-[800px] max-h-[80vh] overflow-y-auto border"
         style={{
           backgroundColor: "var(--panel)",
           borderColor: "var(--border)",
@@ -250,7 +249,9 @@ export default function CreateLoanModal({
           onToggle={() => setLoanOfficerExpanded(!loanOfficerExpanded)}
         />
         <div className="grid grid-cols-2 gap-4">
-          {sectionFields(loanOfficerFields, loanOfficerExpanded).map(renderField)}
+          {sectionFields(loanOfficerFields, loanOfficerExpanded).map(
+            renderField
+          )}
         </div>
 
         {/* Borrower */}
@@ -304,7 +305,8 @@ export default function CreateLoanModal({
         </div>
 
         {result && (
-          <pre className="mt-4 text-xs whitespace-pre-wrap rounded border"
+          <pre
+            className="mt-4 text-xs whitespace-pre-wrap rounded border"
             style={{
               backgroundColor: "var(--background)",
               borderColor: "var(--border)",

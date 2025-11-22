@@ -19,7 +19,6 @@ const FIELD_KEYS = [
 ] as const;
 
 type FieldKey = (typeof FIELD_KEYS)[number];
-
 type FieldState = Record<FieldKey, string>;
 
 export function EnvOverrideModal({ onClose }: Props) {
@@ -57,7 +56,6 @@ export function EnvOverrideModal({ onClose }: Props) {
   async function handleClear() {
     setSubmitting(true);
     setError(null);
-
     try {
       await clearOverrides();
       onClose();
@@ -70,12 +68,12 @@ export function EnvOverrideModal({ onClose }: Props) {
 
   return (
     <div
-      className="fixed inset-0 flex items-center justify-center backdrop-blur-md z-50 animate-in fade-in duration-200"
+      className="fixed inset-0 flex items-start justify-center backdrop-blur-md z-50 pt-24 animate-in fade-in duration-200"
       style={{ backgroundColor: "var(--overlay)" }}
       onClick={onClose}
     >
       <div
-        className="w-full max-w-2xl mx-4 rounded-2xl border shadow-2xl animate-in zoom-in-95 duration-200"
+        className="w-full max-w-2xl mx-4 rounded-2xl border shadow-2xl animate-in zoom-in-95 duration-200 max-h-[80vh] overflow-y-auto"
         style={{
           backgroundColor: "var(--panel-elevated)",
           borderColor: "var(--border)",
@@ -89,16 +87,10 @@ export function EnvOverrideModal({ onClose }: Props) {
           style={{ borderColor: "var(--border)" }}
         >
           <div>
-            <h2 
-              className="text-2xl font-bold"
-              style={{ color: "var(--foreground)" }}
-            >
+            <h2 className="text-2xl font-bold" style={{ color: "var(--foreground)" }}>
               Environment Overrides
             </h2>
-            <p 
-              className="text-sm mt-1"
-              style={{ color: "var(--muted)" }}
-            >
+            <p className="text-sm mt-1" style={{ color: "var(--muted)" }}>
               Override environment variables for this session only
             </p>
           </div>
@@ -131,11 +123,10 @@ export function EnvOverrideModal({ onClose }: Props) {
               border: "1px solid var(--accent)",
             }}
           >
-            <p 
-              className="text-sm"
-              style={{ color: "var(--foreground-secondary)" }}
-            >
-              <strong style={{ color: "var(--accent)" }}>Note:</strong> These values are stored securely in an encrypted HTTP-only cookie and only apply to this browser session. They never leave the server.
+            <p className="text-sm" style={{ color: "var(--foreground-secondary)" }}>
+              <strong style={{ color: "var(--accent)" }}>Note:</strong> These values
+              are stored securely in an encrypted HTTP-only cookie and only apply to this
+              session. They never leave the server.
             </p>
           </div>
 
@@ -143,7 +134,7 @@ export function EnvOverrideModal({ onClose }: Props) {
             <div className="grid grid-cols-1 md:grid-cols-2 gap-4">
               {FIELD_KEYS.map((key) => (
                 <div key={key} className="flex flex-col gap-2">
-                  <label 
+                  <label
                     className="text-xs font-semibold uppercase tracking-wide"
                     style={{ color: "var(--muted)" }}
                   >
@@ -200,14 +191,6 @@ export function EnvOverrideModal({ onClose }: Props) {
                     backgroundColor: "transparent",
                     color: "var(--foreground)",
                   }}
-                  onMouseEnter={(e) => {
-                    e.currentTarget.style.borderColor = "var(--border-hover)";
-                    e.currentTarget.style.backgroundColor = "var(--muted-bg)";
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.borderColor = "var(--border)";
-                    e.currentTarget.style.backgroundColor = "transparent";
-                  }}
                 >
                   Cancel
                 </button>
@@ -215,19 +198,11 @@ export function EnvOverrideModal({ onClose }: Props) {
                 <button
                   type="submit"
                   disabled={submitting}
-                  className="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all hover:scale-105 disabled:opacity-50 disabled:cursor-not-allowed"
+                  className="px-6 py-2.5 rounded-lg text-sm font-semibold transition-all hover:scale-105 disabled:opacity-50"
                   style={{
                     background: "linear-gradient(135deg, var(--accent) 0%, var(--accent-hover) 100%)",
                     color: "var(--button-text)",
                     boxShadow: "var(--shadow-md)",
-                  }}
-                  onMouseEnter={(e) => {
-                    if (!submitting) {
-                      e.currentTarget.style.boxShadow = "var(--shadow-lg)";
-                    }
-                  }}
-                  onMouseLeave={(e) => {
-                    e.currentTarget.style.boxShadow = "var(--shadow-md)";
                   }}
                 >
                   {submitting ? "Applying…" : "Apply Overrides"}
