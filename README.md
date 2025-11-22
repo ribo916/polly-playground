@@ -1,6 +1,6 @@
 # Polly Playground
 
-This project is a **Next.js-based showcase** designed to demonstrate real-world interactions with **Polly's API**. It provides a minimal but production-like structure for authenticating, calling Polly endpoints, and visualizing responses — while keeping credentials and tokens fully secure.
+This project is a **Next.js-based showcase** demonstrating real-world interactions with **Polly’s API**, including authentication, pricing workflows, portal logins, secure environment overrides, and structured server-side logging. All sensitive credentials remain server-side and are never exposed to the browser.
 
 ---
 
@@ -11,107 +11,112 @@ npm install
 npm run dev
 ```
 
-Then open [http://localhost:3000](http://localhost:3000) in your browser.
+Open: **[http://localhost:3000](http://localhost:3000)**
 
-The app includes a few sample pages, such as:
+Featured pages:
 
-* `/loan-scenarios` → Demonstrates launching Polly's embedded Pricer via portal token.
-* `/api/example` → Calls Polly's `/api/v2/pe/users/` endpoint to show a basic API call.
-* `/logs` → Displays real-time server logs of all outbound Polly API requests.
+* `/loan-scenarios` → Launch Polly Portal iFrame via portal token
+* `/api/example` → Example API call to `/api/v2/pe/users/`
+* `/logs` → Real-time server logs for outbound Polly API requests
 
 ---
 
 ## 🧠 Architecture Overview
 
-### 1. Server-Side Request Flow
+### 1. Server-Only API Calls
 
-All network calls to Polly are made **from the server**, never from the client. This ensures that sensitive credentials and API tokens remain protected.
-
-The flow typically looks like:
+All Polly interactions are performed **on the server**, not the client. Credentials, client secrets, and access tokens are never available to browser JavaScript.
 
 ```
-Client → /api/example → /api/auth → Polly API (auth/token)
-                             ↳ Polly API (data endpoint)
+Client → /api/route → Server → Polly API → Server → Client
 ```
 
-Only the **actual Polly API calls** are logged and shown in `/logs`.
+This keeps the surface area secure and avoids exposing API tokens to front-end code.
 
-### 2. `logFetch.ts`
+---
 
-A lightweight wrapper around `fetch()` that:
+## 🔐 Secure Session Overrides
 
-* Measures duration, status, and errors for each call.
-* Redacts sensitive credentials and headers before logging.
-* Only logs **external Polly API calls** (not internal `/api/...` routes).
+The application supports temporary, secure **session-based environment overrides**. These let you switch:
 
-```ts
-const shouldLog = url.includes("pollyex.com") || url.includes("api.stage.polly.io");
-```
+* Polly Base URL
+* Org ticker
+* Username/password
+* Client ID/secret
 
-Redaction automatically removes tokens, passwords, and secrets from both request bodies and headers.
+…without storing anything in the browser.
 
-### 3. `serverLogStore.ts`
+### How it works
 
-In-memory storage for all log entries:
+* The browser stores a **secure, HTTP-only session ID cookie**.
+* The actual override values are stored **only in server memory** (`OverrideStore`).
+* No environment values ever appear in localStorage or client JS.
+* Overrides last until the browser closes or you press **Reset**.
+
+This lets you test different orgs/customers quickly and safely.
+
+---
+
+## 📡 Logging System
+
+### `logFetch.ts`
+
+All outbound calls to Polly pass through `logFetch`, which:
+
+* Captures status, duration, and endpoint
+* Safely parses JSON and URLSearchParams
+* Redacts passwords, tokens, secrets
+* Sends logs to the centralized server log store
+
+### `serverLogStore.ts`
+
+A server-side in-memory (or Redis-backed) store that holds the most recent ~100 log entries.
 
 ```ts
 addServerLog({ endpoint, method, status, duration, request, response, error });
 ```
 
-* Keeps logs only during runtime (not persisted).
-* Trims old entries after 100 items.
+### `/logs` Viewer
 
-### 4. `/api/logs`
+The `/logs` page displays:
 
-A Next.js **Route Handler** that:
+* Endpoint
+* Duration
+* Request + Response bodies (pretty-printed)
+* Error details (if any)
 
-* Returns all logs via `GET`.
-* Clears logs via `DELETE`.
+### Logging Notes
 
-### 5. `/logs` UI
-
-A client page that renders the current logs in a readable format with syntax highlighting.
-
-* Only server-side logs are now shown.
-* Expanding a log entry reveals sanitized request/response payloads.
+* Only **external Polly API calls** are logged to avoid noise.
+* Sensitive values are automatically sanitized.
+* Logs reset when the server restarts unless Redis persistence is enabled.
 
 ---
 
 ## 🧩 Known Edge Cases
 
-* **Chained internal requests**: If a route like `/api/example` calls another internal route (`/api/auth`), only the final outbound requests to Polly are logged. This avoids noise in the `/logs` page.
-* **URLSearchParams bodies**: Automatically converted to objects before logging.
-* **Token or password exposure**: Automatically redacted in both headers and bodies.
-
----
-
-## ⚠️ Refactoring Notes
-
-This setup intentionally avoids using a database or file persistence. However, if you later:
-
-* Add caching or server restarts, logs will reset.
-* Add concurrent API calls, consider thread-safe logging (e.g. with Redis).
-* Expand to other APIs (non-Polly), update the `shouldLog` logic.
-
-When debugging or adding new features, focus on **`logFetch`** — that’s the central hook for all outbound tracking and where most bugs will surface.
+* Invalid override URLs will cause fetch errors (logged properly).
+* Non-JSON responses are still logged cleanly.
+* URLSearchParams bodies are auto-converted to objects.
+* Logs show real requests only; internal `/api/...` hops are intentionally not logged.
 
 ---
 
 ## 🧭 Project Intent
 
-This isn’t meant to be a full product — it’s a **demo harness** for Polly’s APIs. Each route (e.g., `/api/portal-authentication`, `/api/auth`, `/api/example`) should correspond to a real-world Polly workflow and demonstrate what data Polly returns, not how this app functions internally.
+This project is a **demo harness** for exploring Polly API workflows end-to-end. Each API route (pricing scenario, auth, portal login, create-loan, etc.) demonstrates realistic interaction patterns while keeping credentials secure and providing transparent logging.
 
 ---
 
 ## ✅ Summary
 
-| Component           | Purpose                                               |
-| ------------------- | ----------------------------------------------------- |
-| `logFetch.ts`       | Handles outbound Polly API calls and redacted logging |
-| `serverLogStore.ts` | Keeps in-memory log list for current runtime          |
-| `/api/logs`         | Returns or clears logs                                |
-| `/logs`             | Displays all logged Polly calls                       |
+| Component           | Purpose                                        |
+| ------------------- | ---------------------------------------------- |
+| `logFetch.ts`       | Centralized Polly API logging + safe redaction |
+| `serverLogStore.ts` | In-memory/Redis storage for log entries        |
+| `getEnvValue.ts`    | Secure lookup for per-session overrides        |
+| Env Override Modal  | Temporary org/environment switching            |
+| `/api/*` routes     | Server-only Polly API integrations             |
+| `/logs`             | Real-time, structured request inspector        |
 
 ---
-
-**Recommended next step:** integrate additional Polly endpoints into `logFetch()` and the UI to build out a richer demo catalog for pricing, locking, and product workflows.

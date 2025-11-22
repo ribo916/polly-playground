@@ -1,22 +1,33 @@
-// app/api/auth/route.js
+export const runtime = "nodejs";
+export const dynamic = "force-dynamic";
+
 import { NextResponse } from "next/server";
 import { logFetch } from "../../../utils/logFetch";
+import { getEnvValue } from "@/app/lib/getEnvValue";
 
 export async function POST() {
   try {
-    console.log("🔹 Starting token request...");
+    // 🔍 Read override-aware Polly config
+    const BASE = await getEnvValue("POLLY_BASE_URL");
+    const USER = await getEnvValue("POLLY_USERNAME");
+    const PASS = await getEnvValue("POLLY_PASSWORD");
+    const CID  = await getEnvValue("POLLY_CLIENT_ID");
+    const SEC  = await getEnvValue("POLLY_CLIENT_SECRET");
+    const TIKR = await getEnvValue("ORG_TICKER");
+
+    console.log("🔧 Effective ENV:", { BASE, TIKR });
 
     const body = new URLSearchParams({
-      username: process.env.POLLY_USERNAME,
-      password: process.env.POLLY_PASSWORD,
+      username: USER ?? "",
+      password: PASS ?? "",
       grant_type: "password",
-      client_id: process.env.POLLY_CLIENT_ID,
-      client_secret: process.env.POLLY_CLIENT_SECRET,
+      client_id: CID ?? "",
+      client_secret: SEC ?? "",
     });
 
-    // ✅ use logFetch so it’s captured in serverLogStore
+    // 🔥 Direct call to Polly, not internal API → override cookies work
     const tokenResult = await logFetch(
-      `${process.env.POLLY_BASE_URL}/api/v2/auth/token/`,
+      `${BASE}/api/v2/auth/token/`,
       {
         method: "POST",
         headers: { "Content-Type": "application/x-www-form-urlencoded" },
@@ -25,10 +36,10 @@ export async function POST() {
       "/api/v2/auth/token"
     );
 
-    console.log("🔹 Response status:", tokenResult.status);
-    // console.log("🔹 Response body:", tokenResult.data);
+    return NextResponse.json(tokenResult.data, {
+      status: tokenResult.status,
+    });
 
-    return NextResponse.json(tokenResult.data, { status: tokenResult.status });
   } catch (err) {
     console.error("❌ Auth route error:", err);
     return NextResponse.json({ error: err.message }, { status: 500 });

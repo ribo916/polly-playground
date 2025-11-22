@@ -4,6 +4,7 @@ import "./globals.css";
 import ThemeToggle from "../components/ThemeToggle";
 import Sidebar from "../components/Sidebar";
 import Link from "next/link";
+import EnvOverrideButton from "../components/EnvOverrideButton";
 
 export const metadata = {
   title: "Polly Playground",
@@ -34,7 +35,11 @@ export default function RootLayout({ children }: { children: ReactNode }) {
                 Polly Playground
               </h1>
             </Link>
-            <ThemeToggle />
+
+            <div className="flex items-center gap-2">
+              <EnvOverrideButton />
+              <ThemeToggle />
+            </div>
           </header>
 
           {/* Main layout */}

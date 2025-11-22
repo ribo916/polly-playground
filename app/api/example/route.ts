@@ -1,19 +1,19 @@
-import { NextRequest, NextResponse } from "next/server";
+import { NextResponse } from "next/server";
 import { logFetch } from "../../../utils/logFetch";
 import { getEnvValue } from "@/app/lib/getEnvValue";
 
-export async function POST(request: NextRequest) {
+export async function GET() {
   try {
-    // 1️⃣ Read override-aware env vars
+    // 1️⃣ Read override-aware Polly config
     const BASE = await getEnvValue("POLLY_BASE_URL");
     const USER = await getEnvValue("POLLY_USERNAME");
     const PASS = await getEnvValue("POLLY_PASSWORD");
     const CID  = await getEnvValue("POLLY_CLIENT_ID");
     const SEC  = await getEnvValue("POLLY_CLIENT_SECRET");
 
-    console.log("🔧 Effective ENV (CreateLoan):", { BASE });
+    console.log("🔧 Effective ENV (users route):", { BASE });
 
-    // 2️⃣ Direct token request (NO /api/auth recursion)
+    // 2️⃣ Direct token request to Polly (no internal /api/auth)
     const tokenResult = await logFetch(
       `${BASE}/api/v2/auth/token/`,
       {
@@ -33,29 +33,23 @@ export async function POST(request: NextRequest) {
     const access_token = tokenResult?.data?.access_token;
     if (!access_token) throw new Error("Missing access token");
 
-    // 3️⃣ Get CreateLoan payload from client
-    const payload = await request.json();
-    console.log("🔥 Incoming CreateLoan payload:", payload);
-
-    // 4️⃣ Create Loan directly against Polly
-    const { data: loanData, status } = await logFetch(
-      `${BASE}/api/v2/loans/`,
+    // 3️⃣ Direct call to Polly PE users endpoint
+    const { data: usersData, status } = await logFetch(
+      `${BASE}/api/v2/pe/users/`,
       {
-        method: "POST",
+        method: "GET",
         headers: {
-          "Content-Type": "application/json",
           Authorization: `Bearer ${access_token}`,
         },
-        body: JSON.stringify(payload),
       },
-      "/api/v2/loans/"
+      "/api/v2/pe/users/"
     );
 
-    // 5️⃣ Response back to UI
-    return NextResponse.json({ ok: true, loan: loanData }, { status });
+    // 4️⃣ Return to UI
+    return NextResponse.json(usersData, { status });
 
   } catch (err: any) {
-    console.error("❌ CreateLoan route error:", err);
-    return NextResponse.json({ ok: false, error: err.message }, { status: 500 });
+    console.error("❌ Example route error:", err);
+    return NextResponse.json({ error: err.message }, { status: 500 });
   }
 }
